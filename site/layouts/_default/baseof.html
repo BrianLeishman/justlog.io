@@ -9,13 +9,19 @@
     {{ $css := resources.Get "scss/main.scss" | toCSS $opts | minify | fingerprint }}
     <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/brands.min.css" integrity="sha512-58P9Hy7II0YeXLv/hMxCMnJSyVjhNsGNMGydTGVMBxSXGbhbjmrWMBOjfxyKDTaXwG8rOOJQfpGO8VDV9JbXQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     {{ block "head" . }}{{ end }}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">{{ .Site.Title }}</a>
-            <div id="auth" class="ms-auto"></div>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <a href="https://github.com/BrianLeishman/justlog.io" class="text-body-secondary" aria-label="GitHub" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-github fa-lg"></i>
+                </a>
+                <div id="auth"></div>
+            </div>
         </div>
     </nav>
 

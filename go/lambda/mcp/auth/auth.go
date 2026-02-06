@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/BrianLeishman/justlog.io/go/dynamo"
 )
 
 type contextKey struct{}
@@ -20,6 +22,16 @@ type User struct {
 const cognitoDomain = "https://justlog.auth.us-east-1.amazoncognito.com"
 
 func FromToken(ctx context.Context, accessToken string) (User, error) {
+	// Try API key lookup first
+	if uid, err := dynamo.LookupAPIKey(ctx, accessToken); err == nil {
+		return User{Sub: uid}, nil
+	}
+
+	// Fall back to Cognito access token
+	return FromCognito(ctx, accessToken)
+}
+
+func FromCognito(ctx context.Context, accessToken string) (User, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, cognitoDomain+"/oauth2/userInfo", nil)
 	if err != nil {
 		return User{}, err

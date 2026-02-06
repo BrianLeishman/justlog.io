@@ -119,13 +119,13 @@ function renderMcpSetup(): string {
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Access Token</label>
+                    <label class="form-label fw-semibold">API Key</label>
                     <div class="input-group">
                         <input type="password" class="form-control form-control-sm font-monospace" value="${token}" readonly id="token-field">
                         <button class="btn btn-outline-secondary btn-sm" type="button" id="toggle-token">Show</button>
                         <button class="btn btn-outline-secondary btn-sm" type="button" id="copy-token">Copy</button>
                     </div>
-                    <div class="form-text">This token expires after 1 hour. Sign out and back in to get a new one.</div>
+                    <div class="form-text">This key does not expire. Sign out and back in to generate a new one (revokes the old key).</div>
                 </div>
             </div>
         </div>`;

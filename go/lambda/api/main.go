@@ -16,6 +16,7 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/token", handleToken)
 	mux.HandleFunc("/", handleEntries)
 
 	handler := cors(mux)
@@ -33,13 +34,53 @@ func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func handleToken(w http.ResponseWriter, r *http.Request) {
+	// Auth via Cognito access token (short-lived) to issue/revoke API key
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if token == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Must use Cognito auth here, not API key
+	u, err := mcpauth.FromCognito(r.Context(), token)
+	if err != nil {
+		log.Printf("auth error: %v", err)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPost:
+		key, err := dynamo.CreateAPIKey(r.Context(), u.Sub)
+		if err != nil {
+			log.Printf("create api key error: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"api_key": key})
+
+	case http.MethodDelete:
+		if err := dynamo.DeleteAPIKey(r.Context(), u.Sub); err != nil {
+			log.Printf("delete api key error: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func handleEntries(w http.ResponseWriter, r *http.Request) {

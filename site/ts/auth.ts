@@ -91,6 +91,9 @@ export async function handleCallback(): Promise<boolean> {
         localStorage.setItem('refresh_token', tokens.refresh_token);
     }
 
+    // Exchange Cognito token for long-lived API key
+    await exchangeForAPIKey(tokens.access_token);
+
     return true;
 }
 
@@ -125,8 +128,28 @@ export function getUser(): { email: string; name: string; picture: string } | nu
     }
 }
 
+const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
+
+async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
+    try {
+        const resp = await fetch(`${apiBase}/api/token`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${cognitoToken}` },
+        });
+        if (resp.ok) {
+            interface TokenResponse {
+                api_key: string;
+            }
+            const data: TokenResponse = await resp.json() as TokenResponse;
+            localStorage.setItem('api_key', data.api_key);
+        }
+    } catch {
+        // If exchange fails, we still have the Cognito token as fallback
+    }
+}
+
 export function getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
+    return localStorage.getItem('api_key') ?? localStorage.getItem('access_token');
 }
 
 export function isLoggedIn(): boolean {
@@ -137,4 +160,5 @@ export function logout(): void {
     localStorage.removeItem('id_token');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('api_key');
 }
