@@ -12,7 +12,7 @@ Connect the JustLog MCP server to your AI assistant. Then just talk to it normal
 - "Did 30 minutes on the treadmill, 12% incline at 2.5 mph"
 - "Weighed in at 236 this morning"
 
-The AI figures out the nutritional breakdown, calorie burn, or weight entry and logs it through the MCP server. When you want to see your data, just ask — daily totals, weekly averages, trends, charts, whatever you need.
+The AI figures out the nutritional breakdown, calorie burn, or weight entry and logs it through the MCP server. When you want to see your data, just ask — daily totals, weekly averages, trends, whatever you need.
 
 ## What Gets Tracked
 
@@ -26,26 +26,71 @@ That's it. No barcode scanning, no food database searches, no manual data entry 
 
 ## Stack
 
-- AWS Lambda (MCP server and REST API)
-- DynamoDB (data storage)
-- AWS Cognito (authentication, supports Google login)
-- S3 + CloudFront + Hugo (marketing site / docs)
+- **Frontend**: Hugo + Bootstrap 5.3 (SCSS via Dart Sass) + TypeScript (esbuild)
+- **API**: Pure Go HTTP server, deployed to AWS Lambda behind API Gateway
+- **MCP Server**: Go, `mark3labs/mcp-go`, Streamable HTTP transport, deployed to Lambda
+- **Database**: DynamoDB
+- **Auth**: AWS Cognito (Google sign-in supported)
+- **Hosting**: S3 + CloudFront with KVS-based blue-green deploys
 
-## MCP Server
+## Project Structure
 
-The server implements the MCP 2025-06-18 specification using Streamable HTTP transport. It exposes a small set of tools for logging and querying data. See `agents.md` for detailed guidance on how AI agents should interact with the server, including how to estimate macros, handle ambiguous food descriptions, and calculate exercise calories.
+```
+site/          Hugo frontend (layouts, SCSS, TypeScript, content)
+go/api/        Minimal HTTP handler library (context-based, no frameworks)
+go/cmd/        CLI tools (esbuild compiler, hugo dev server, deploy)
+go/lambda/api/ REST API (Lambda + API Gateway)
+go/lambda/mcp/ MCP server (Lambda)
+go/dynamo/     DynamoDB helpers
+aws/           CloudFront Functions
+```
+
+See `AGENTS.md` for the full development guide.
+
+## Prerequisites
+
+- Go 1.22+
+- Hugo (extended edition)
+- Dart Sass
+- Node.js + pnpm
+- AWS CLI (configured)
+
+## Development
+
+```bash
+# Install frontend dependencies
+cd site && pnpm install && cd ..
+
+# Start dev server (esbuild watch + Hugo server)
+go run ./go/cmd/hugo-server
+
+# Run API locally (port 8090)
+go run ./go/lambda/api
+
+# Run MCP server locally (port 8088)
+go run ./go/lambda/mcp
+```
+
+## Deploy
+
+```bash
+# Deploy Hugo site to S3 + CloudFront
+go run ./go/cmd/deploy-site
+
+# Deploy API Lambda
+cd go/lambda/api && node deploy.js
+
+# Deploy MCP Lambda
+cd go/lambda/mcp && node deploy.js
+```
 
 ## Authentication
 
-Users create an account through AWS Cognito. Google sign-in is supported. The MCP server requires a valid bearer token for all operations. Each user's data is isolated — you can only read and write your own entries.
+Users create an account through AWS Cognito. Google sign-in is supported. The MCP server and API require a valid bearer token for all operations. Each user's data is isolated.
 
-## API
+## MCP Server
 
-In addition to the MCP interface, a standard REST API is available for building dashboards, integrations, or export tools. The API uses the same Cognito authentication.
-
-## Self-Hosting
-
-JustLog is open source. If you want to run your own instance, you'll need an AWS account. Infrastructure is defined as code and designed to operate within free tier or near-free tier costs for personal use.
+The server implements the MCP 2025-06-18 specification using Streamable HTTP transport. It exposes tools for logging food, exercise, and weight, plus querying historical data. See `AGENTS.md` for detailed guidance on how AI agents should interact with the server.
 
 ## License
 
