@@ -7,6 +7,7 @@ site/assets/js/
 # Hugo output
 site/public/
 site/resources/
+site/.hugo_build.lock
 
 # Go
 /bootstrap
