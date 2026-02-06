@@ -1,4 +1,5 @@
 import { handleCallback, getUser, login, logout } from './auth';
+import { renderDashboard } from './dashboard';
 
 async function init(): Promise<void> {
     // Handle OAuth callback
@@ -29,6 +30,12 @@ async function init(): Promise<void> {
             logout();
             window.location.href = '/';
         });
+
+        // Render dashboard
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+            void renderDashboard(dashboard);
+        }
     } else {
         authContainer.innerHTML = `
             <button class="btn btn-sm btn-primary" id="login-btn">Sign in with Google</button>

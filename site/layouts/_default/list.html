@@ -1,10 +1,5 @@
 {{ define "main" }}
 <h1>{{ .Title }}</h1>
 {{ .Content }}
-{{ range .Pages }}
-<div class="mb-3">
-    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-    {{ .Summary }}
-</div>
-{{ end }}
+<div id="dashboard"></div>
 {{ end }}

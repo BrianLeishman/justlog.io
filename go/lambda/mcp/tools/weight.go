@@ -1,0 +1,100 @@
+package tools
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/BrianLeishman/justlog.io/go/dynamo"
+	mcpauth "github.com/BrianLeishman/justlog.io/go/lambda/mcp/auth"
+	"github.com/mark3labs/mcp-go/mcp"
+)
+
+func init() {
+	Register(logWeight)
+	Register(getWeight)
+}
+
+func logWeight(s *Spec) {
+	s.Define("log_weight",
+		mcp.WithDescription("Log a weight measurement. Use this when the user tells you their weight."),
+		mcp.WithNumber("value", mcp.Description("Weight value"), mcp.Required()),
+		mcp.WithString("unit", mcp.Description("Unit: lbs or kg (default: lbs)")),
+		mcp.WithString("notes", mcp.Description("Optional notes")),
+		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp; defaults to now"), mcp.Required()),
+	)
+
+	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		uid, err := mcpauth.UserID(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		ts, err := parseTimestamp(req.GetString("timestamp", ""))
+		if err != nil {
+			return nil, err
+		}
+
+		unit := req.GetString("unit", "lbs")
+
+		entry := dynamo.Entry{
+			UID:       uid,
+			SK:        dynamo.MakeSK("weight", ts),
+			Type:      "weight",
+			Value:     req.GetFloat("value", 0),
+			Unit:      unit,
+			Notes:     req.GetString("notes", ""),
+			CreatedAt: ts.Format(time.RFC3339),
+		}
+
+		if err := dynamo.PutEntry(ctx, entry); err != nil {
+			return nil, fmt.Errorf("save weight entry: %w", err)
+		}
+
+		return mcp.NewToolResultText(fmt.Sprintf("Logged weight: %.1f %s", entry.Value, entry.Unit)), nil
+	})
+}
+
+func getWeight(s *Spec) {
+	s.Define("get_weight",
+		mcp.WithDescription("Get weight entries for a date range. Defaults to today."),
+		mcp.WithString("from", mcp.Description("Start date, ISO 8601 (e.g. 2026-02-05)")),
+		mcp.WithString("to", mcp.Description("End date, ISO 8601 (e.g. 2026-02-05)")),
+	)
+
+	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		uid, err := mcpauth.UserID(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		from, to := todayRange()
+		if v := req.GetString("from", ""); v != "" {
+			t, err := time.Parse("2006-01-02", v)
+			if err != nil {
+				return nil, fmt.Errorf("invalid from date: %w", err)
+			}
+			from = t.UTC()
+		}
+		if v := req.GetString("to", ""); v != "" {
+			t, err := time.Parse("2006-01-02", v)
+			if err != nil {
+				return nil, fmt.Errorf("invalid to date: %w", err)
+			}
+			to = t.AddDate(0, 0, 1).UTC()
+		}
+
+		entries, err := dynamo.GetEntries(ctx, uid, "weight", from, to)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(entries) == 0 {
+			return mcp.NewToolResultText("No weight entries found for that date range."), nil
+		}
+
+		b, _ := json.MarshalIndent(entries, "", "  ")
+		return mcp.NewToolResultText(string(b)), nil
+	})
+}
