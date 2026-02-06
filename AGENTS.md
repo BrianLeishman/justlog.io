@@ -8,6 +8,8 @@ JustLog is a calorie, macro, and weight tracking service. There is no app UI for
 
 **Philosophy:** Minimal dependencies. Pure Bootstrap, pure Go, pure TypeScript. Every technology choice should be idiomatic to the tool itself — no unnecessary abstractions, wrappers, or frameworks.
 
+**AWS Profile:** All AWS operations use `AWS_PROFILE=justlog`. Set this in your shell or prefix commands with it. Never use the default profile — that points to a different account.
+
 ## Directory Structure
 
 ```

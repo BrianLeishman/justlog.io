@@ -1,0 +1,16 @@
+# Dependencies
+site/node_modules/
+
+# esbuild output
+site/assets/js/
+
+# Hugo output
+site/public/
+site/resources/
+
+# Go
+/bootstrap
+*.zip
+
+# OS
+.DS_Store

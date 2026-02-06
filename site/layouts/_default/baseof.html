@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ block "title" . }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
+
+    {{ $opts := dict "transpiler" "dartsass" "silenceDeprecations" (slice "import" "global-builtin" "color-functions") }}
+    {{ $css := resources.Get "scss/main.scss" | toCSS $opts | minify | fingerprint }}
+    <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+
+    {{ block "head" . }}{{ end }}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">{{ .Site.Title }}</a>
+            <div id="auth" class="ms-auto"></div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        {{ block "main" . }}{{ end }}
+    </main>
+
+    {{ with resources.Get "js/app.js" | fingerprint }}
+        <script type="module" src="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}"></script>
+    {{ end }}
+    {{ with resources.Get "js/app.js.map" }}{{ .Publish }}{{ end }}
+</body>
+</html>
