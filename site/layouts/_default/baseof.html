@@ -9,7 +9,8 @@
     {{ $css := resources.Get "scss/main.scss" | toCSS $opts | minify | fingerprint }}
     <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/brands.min.css" integrity="sha512-58P9Hy7II0YeXLv/hMxCMnJSyVjhNsGNMGydTGVMBxSXGbhbjmrWMBOjfxyKDTaXwG8rOOJQfpGO8VDV9JbXQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {{ $fa := resources.Get "node_modules/@fortawesome/fontawesome-free/css/brands.min.css" | resources.Copy "css/fa-brands.css" | fingerprint }}
+    <link rel="stylesheet" href="{{ $fa.RelPermalink }}" integrity="{{ $fa.Data.Integrity }}">
     {{ block "head" . }}{{ end }}
 </head>
 <body>
