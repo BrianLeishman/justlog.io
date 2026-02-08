@@ -136,11 +136,12 @@ async function deleteAPIKey(keyId: string): Promise<boolean> {
 
 function renderKeyRow(key: APIKeyInfo): string {
     const created = new Date(key.created_at).toLocaleDateString();
+    const isWebUI = key.label === 'Web UI';
     return `<tr data-key-id="${key.key_id}">
-        <td>${key.label || 'Untitled'}</td>
+        <td>${key.label || 'Untitled'}${isWebUI ? ' <span class="badge text-bg-secondary">browser</span>' : ''}</td>
         <td class="text-body-secondary">${created}</td>
         <td class="text-end">
-            <button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>
+            ${isWebUI ? '' : `<button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>`}
         </td>
     </tr>`;
 }
@@ -201,20 +202,19 @@ function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
             return;
         }
 
-        // Store first key as the active API key for this browser
         if (!localStorage.getItem('api_key')) {
             localStorage.setItem('api_key', result.api_key);
         }
 
-        // Show the new key
-        const alert = document.getElementById('new-key-alert');
-        const value = document.getElementById('new-key-value');
-        if (alert && value) {
-            value.textContent = result.api_key;
-            alert.classList.remove('d-none');
-        }
-
+        // Refresh first, then show the key (refresh re-renders the DOM)
         await refreshDashboard();
+
+        const alertEl = document.getElementById('new-key-alert');
+        const value = document.getElementById('new-key-value');
+        if (alertEl && value) {
+            value.textContent = result.api_key;
+            alertEl.classList.remove('d-none');
+        }
     });
 
     document.getElementById('copy-new-key')?.addEventListener('click', () => {
