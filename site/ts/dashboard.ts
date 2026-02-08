@@ -2,6 +2,14 @@ import { getEntries } from './api';
 import type { Entry } from './api';
 import { getAccessToken } from './auth';
 
+const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
+
+interface APIKeyInfo {
+    key_id: string;
+    label: string;
+    created_at: string;
+}
+
 function formatTime(iso: string): string {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -102,9 +110,68 @@ function renderWeight(entries: Entry[]): string {
             <p class="text-body-secondary">${formatTime(latest.CreatedAt)}</p>`;
 }
 
-function renderMcpSetup(): string {
-    const token = getAccessToken() ?? '';
+async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
+    const token = getAccessToken();
+    if (!token) {
+        return [];
+    }
+    const resp = await fetch(`${apiBase}/api/token`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!resp.ok) {
+        return [];
+    }
+    return await resp.json() as APIKeyInfo[];
+}
+
+async function createAPIKey(label: string): Promise<{ api_key: string; key_id: string } | null> {
+    const token = getAccessToken();
+    if (!token) {
+        return null;
+    }
+    const resp = await fetch(`${apiBase}/api/token`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ label }),
+    });
+    if (!resp.ok) {
+        return null;
+    }
+    return await resp.json() as { api_key: string; key_id: string };
+}
+
+async function deleteAPIKey(keyId: string): Promise<boolean> {
+    const token = getAccessToken();
+    if (!token) {
+        return false;
+    }
+    const resp = await fetch(`${apiBase}/api/token?id=${encodeURIComponent(keyId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return resp.ok;
+}
+
+function renderKeyRow(key: APIKeyInfo): string {
+    const created = new Date(key.created_at).toLocaleDateString();
+    return `<tr data-key-id="${key.key_id}">
+        <td>${key.label || 'Untitled'}</td>
+        <td class="text-body-secondary">${created}</td>
+        <td class="text-end">
+            <button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>
+        </td>
+    </tr>`;
+}
+
+function renderMcpSetup(keys: APIKeyInfo[]): string {
     const endpoint = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com/mcp';
+
+    const keyRows = keys.length > 0
+        ? keys.map(renderKeyRow).join('')
+        : '<tr><td colspan="3" class="text-body-secondary">No API keys yet.</td></tr>';
 
     return `
         <div class="card">
@@ -118,20 +185,28 @@ function renderMcpSetup(): string {
                         <button class="btn btn-outline-secondary btn-sm" type="button" id="copy-endpoint">Copy</button>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">API Key</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control form-control-sm font-monospace" value="${token}" readonly id="token-field">
-                        <button class="btn btn-outline-secondary btn-sm" type="button" id="toggle-token">Show</button>
-                        <button class="btn btn-outline-secondary btn-sm" type="button" id="copy-token">Copy</button>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">API Keys</label>
+                    <table class="table table-sm mb-2">
+                        <thead><tr><th>Label</th><th>Created</th><th></th></tr></thead>
+                        <tbody id="api-keys-tbody">${keyRows}</tbody>
+                    </table>
+                    <div id="new-key-alert" class="d-none alert alert-success alert-dismissible mb-2">
+                        <strong>New key created:</strong> <code id="new-key-value"></code>
+                        <button class="btn btn-outline-success btn-sm ms-2" id="copy-new-key">Copy</button>
+                        <div class="form-text mt-1">Save this key now — it won't be shown again.</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                    <div class="form-text">This key does not expire. Sign out and back in to generate a new one (revokes the old key).</div>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" placeholder="Key label (e.g. Claude Code)" id="new-key-label">
+                        <button class="btn btn-primary" type="button" id="create-key-btn">Create Key</button>
+                    </div>
                 </div>
             </div>
         </div>`;
 }
 
-function bindMcpButtons(): void {
+function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
     document.getElementById('copy-endpoint')?.addEventListener('click', () => {
         const input = document.querySelector('#copy-endpoint')?.parentElement?.querySelector('input');
         if (input) {
@@ -139,21 +214,49 @@ function bindMcpButtons(): void {
         }
     });
 
-    document.getElementById('copy-token')?.addEventListener('click', () => {
-        const input = document.getElementById('token-field') as HTMLInputElement | null;
-        if (input) {
-            void navigator.clipboard.writeText(input.value);
+    document.getElementById('create-key-btn')?.addEventListener('click', async () => {
+        const input = document.getElementById('new-key-label') as HTMLInputElement | null;
+        const label = input?.value.trim() || 'Untitled';
+        const result = await createAPIKey(label);
+        if (!result) {
+            return;
+        }
+
+        // Store first key as the active API key for this browser
+        if (!localStorage.getItem('api_key')) {
+            localStorage.setItem('api_key', result.api_key);
+        }
+
+        // Show the new key
+        const alert = document.getElementById('new-key-alert');
+        const value = document.getElementById('new-key-value');
+        if (alert && value) {
+            value.textContent = result.api_key;
+            alert.classList.remove('d-none');
+        }
+
+        await refreshDashboard();
+    });
+
+    document.getElementById('copy-new-key')?.addEventListener('click', () => {
+        const value = document.getElementById('new-key-value');
+        if (value?.textContent) {
+            void navigator.clipboard.writeText(value.textContent);
         }
     });
 
-    document.getElementById('toggle-token')?.addEventListener('click', () => {
-        const input = document.getElementById('token-field') as HTMLInputElement | null;
-        const btn = document.getElementById('toggle-token');
-        if (input && btn) {
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            btn.textContent = isHidden ? 'Hide' : 'Show';
-        }
+    document.querySelectorAll('.delete-key-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const keyId = (btn as HTMLElement).dataset.keyId;
+            if (!keyId) {
+                return;
+            }
+            if (!confirm('Revoke this API key? Any integrations using it will stop working.')) {
+                return;
+            }
+            await deleteAPIKey(keyId);
+            await refreshDashboard();
+        });
     });
 }
 
@@ -161,10 +264,11 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     container.innerHTML = '<p class="text-body-secondary">Loading...</p>';
 
     const today = new Date().toISOString().split('T')[0];
-    const [food, exercise, weight] = await Promise.all([
+    const [food, exercise, weight, keys] = await Promise.all([
         getEntries('food', today, today),
         getEntries('exercise', today, today),
         getEntries('weight', today, today),
+        fetchAPIKeys(),
     ]);
 
     container.innerHTML = `
@@ -182,9 +286,9 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
                 ${renderWeight(weight)}
             </div>
             <div class="col-12 mt-4">
-                ${renderMcpSetup()}
+                ${renderMcpSetup(keys)}
             </div>
         </div>`;
 
-    bindMcpButtons();
+    bindMcpButtons(() => renderDashboard(container));
 }
