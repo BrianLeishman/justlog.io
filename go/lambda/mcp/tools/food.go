@@ -44,7 +44,7 @@ func logFood(s *Spec) {
 
 		entry := dynamo.Entry{
 			UID:         uid,
-			SK:          dynamo.MakeSK("food", ts),
+			SK:          dynamo.MakeSK("food"),
 			Type:        "food",
 			Description: req.GetString("description", ""),
 			Calories:    req.GetFloat("calories", 0),

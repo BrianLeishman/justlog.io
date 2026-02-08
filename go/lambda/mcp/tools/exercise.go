@@ -39,7 +39,7 @@ func logExercise(s *Spec) {
 
 		entry := dynamo.Entry{
 			UID:         uid,
-			SK:          dynamo.MakeSK("exercise", ts),
+			SK:          dynamo.MakeSK("exercise"),
 			Type:        "exercise",
 			Description: req.GetString("description", ""),
 			Calories:    req.GetFloat("calories_burned", 0),

@@ -2,8 +2,6 @@ package dynamo
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/rs/xid"
 )
 
 type Entry struct {
@@ -32,10 +31,8 @@ type Entry struct {
 	CreatedAt   string  `dynamodbav:"createdAt"`
 }
 
-func MakeSK(entryType string, ts time.Time) string {
-	b := make([]byte, 4)
-	_, _ = rand.Read(b)
-	return entryType + "#" + ts.UTC().Format(time.RFC3339) + "#" + hex.EncodeToString(b)
+func MakeSK(entryType string) string {
+	return entryType + "#" + xid.New().String()
 }
 
 func PutEntry(ctx context.Context, entry Entry) error {
@@ -62,16 +59,15 @@ func GetEntries(ctx context.Context, uid, entryType string, from, to time.Time) 
 		return nil, err
 	}
 
-	skFrom := entryType + "#" + from.UTC().Format(time.RFC3339)
-	skTo := entryType + "#" + to.UTC().Format(time.RFC3339)
-
 	out, err := db.Query(ctx, &dynamodb.QueryInput{
 		TableName:              aws.String(TableName),
-		KeyConditionExpression: aws.String("uid = :uid AND sk BETWEEN :from AND :to"),
+		KeyConditionExpression: aws.String("uid = :uid AND begins_with(sk, :prefix)"),
+		FilterExpression:       aws.String("createdAt BETWEEN :from AND :to"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":uid":  &types.AttributeValueMemberS{Value: uid},
-			":from": &types.AttributeValueMemberS{Value: skFrom},
-			":to":   &types.AttributeValueMemberS{Value: skTo},
+			":uid":    &types.AttributeValueMemberS{Value: uid},
+			":prefix": &types.AttributeValueMemberS{Value: entryType + "#"},
+			":from":   &types.AttributeValueMemberS{Value: from.UTC().Format(time.RFC3339)},
+			":to":     &types.AttributeValueMemberS{Value: to.UTC().Format(time.RFC3339)},
 		},
 		ScanIndexForward: aws.Bool(false),
 	})

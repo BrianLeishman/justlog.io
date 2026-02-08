@@ -40,7 +40,7 @@ func logWeight(s *Spec) {
 
 		entry := dynamo.Entry{
 			UID:       uid,
-			SK:        dynamo.MakeSK("weight", ts),
+			SK:        dynamo.MakeSK("weight"),
 			Type:      "weight",
 			Value:     req.GetFloat("value", 0),
 			Unit:      unit,
