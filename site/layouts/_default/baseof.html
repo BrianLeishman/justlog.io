@@ -9,8 +9,10 @@
     {{ $css := resources.Get "scss/main.scss" | toCSS $opts | minify | fingerprint }}
     <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 
-    {{ $fa := resources.Get "node_modules/@fortawesome/fontawesome-free/css/brands.min.css" | resources.Copy "css/fa-brands.css" | fingerprint }}
-    <link rel="stylesheet" href="{{ $fa.RelPermalink }}" integrity="{{ $fa.Data.Integrity }}">
+    {{ $faBase := resources.Get "node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css" | resources.Copy "css/fa-fontawesome.css" | fingerprint }}
+    <link rel="stylesheet" href="{{ $faBase.RelPermalink }}" integrity="{{ $faBase.Data.Integrity }}">
+    {{ $faBrands := resources.Get "node_modules/@fortawesome/fontawesome-free/css/brands.min.css" | resources.Copy "css/fa-brands.css" | fingerprint }}
+    <link rel="stylesheet" href="{{ $faBrands.RelPermalink }}" integrity="{{ $faBrands.Data.Integrity }}">
     {{ block "head" . }}{{ end }}
 </head>
 <body>
