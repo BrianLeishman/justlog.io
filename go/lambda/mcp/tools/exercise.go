@@ -23,7 +23,7 @@ func logExercise(s *Spec) {
 		mcp.WithNumber("calories_burned", mcp.Description("Estimated calories burned")),
 		mcp.WithNumber("duration_minutes", mcp.Description("Duration in minutes")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
-		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp; defaults to now"), mcp.Required()),
+		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset (e.g. 2026-02-08T17:30:00-05:00); defaults to now UTC"), mcp.Required()),
 	)
 
 	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

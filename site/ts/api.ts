@@ -50,22 +50,21 @@ function showError(message: string): void {
 }
 
 export interface Entry {
-    UID: string;
-    SK: string;
-    Type: string;
-    Description: string;
-    Calories: number;
-    Protein: number;
-    Carbs: number;
-    Fat: number;
-    Fiber: number;
-    Caffeine: number;
-    Cholesterol: number;
-    Duration: number;
-    Value: number;
-    Unit: string;
-    Notes: string;
-    CreatedAt: string;
+    sk: string;
+    type: string;
+    description: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    caffeine: number;
+    cholesterol: number;
+    duration: number;
+    value: number;
+    unit: string;
+    notes: string;
+    created_at: string;
 }
 
 export async function getEntries(type: string, from?: string, to?: string): Promise<Entry[]> {

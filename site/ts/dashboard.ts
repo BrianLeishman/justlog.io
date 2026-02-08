@@ -25,23 +25,23 @@ function renderFoodTable(entries: Entry[]): string {
     let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0, totalCaff = 0, totalChol = 0;
 
     const rows = entries.map(e => {
-        totalCal += e.Calories;
-        totalP += e.Protein;
-        totalC += e.Carbs;
-        totalFat += e.Fat;
-        totalFiber += e.Fiber;
-        totalCaff += e.Caffeine;
-        totalChol += e.Cholesterol;
+        totalCal += e.calories;
+        totalP += e.protein;
+        totalC += e.carbs;
+        totalFat += e.fat;
+        totalFiber += e.fiber;
+        totalCaff += e.caffeine;
+        totalChol += e.cholesterol;
         return `<tr>
-            <td>${formatTime(e.CreatedAt)}</td>
-            <td>${e.Description}</td>
-            <td class="text-end">${num(e.Calories)}</td>
-            <td class="text-end">${num(e.Protein)}</td>
-            <td class="text-end">${num(e.Carbs)}</td>
-            <td class="text-end">${num(e.Fat)}</td>
-            <td class="text-end">${num(e.Fiber)}</td>
-            <td class="text-end">${num(e.Caffeine)}</td>
-            <td class="text-end">${num(e.Cholesterol)}</td>
+            <td>${formatTime(e.created_at)}</td>
+            <td>${e.description}</td>
+            <td class="text-end">${num(e.calories)}</td>
+            <td class="text-end">${num(e.protein)}</td>
+            <td class="text-end">${num(e.carbs)}</td>
+            <td class="text-end">${num(e.fat)}</td>
+            <td class="text-end">${num(e.fiber)}</td>
+            <td class="text-end">${num(e.caffeine)}</td>
+            <td class="text-end">${num(e.cholesterol)}</td>
         </tr>`;
     }).join('');
 
@@ -85,10 +85,10 @@ function renderExerciseTable(entries: Entry[]): string {
     }
 
     const rows = entries.map(e => `<tr>
-        <td>${formatTime(e.CreatedAt)}</td>
-        <td>${e.Description}</td>
-        <td class="text-end">${num(e.Duration)}</td>
-        <td class="text-end">${num(e.Calories)}</td>
+        <td>${formatTime(e.created_at)}</td>
+        <td>${e.description}</td>
+        <td class="text-end">${num(e.duration)}</td>
+        <td class="text-end">${num(e.calories)}</td>
     </tr>`).join('');
 
     return `
@@ -115,10 +115,10 @@ function renderWeightTable(entries: Entry[]): string {
     }
 
     const rows = entries.map(e => `<tr>
-        <td>${formatTime(e.CreatedAt)}</td>
-        <td class="text-end">${weightFmt.format(e.Value)}</td>
-        <td>${e.Unit || 'lbs'}</td>
-        <td class="text-body-secondary">${e.Notes || ''}</td>
+        <td>${formatTime(e.created_at)}</td>
+        <td class="text-end">${weightFmt.format(e.value)}</td>
+        <td>${e.unit || 'lbs'}</td>
+        <td class="text-body-secondary">${e.notes || ''}</td>
     </tr>`).join('');
 
     return `
@@ -144,12 +144,12 @@ function renderWeightChart(history: Entry[]): void {
     }
 
     // Sort oldest first for the chart
-    const sorted = [...history].sort((a, b) => a.CreatedAt.localeCompare(b.CreatedAt));
+    const sorted = [...history].sort((a, b) => a.created_at.localeCompare(b.created_at));
 
     // Take one entry per day (latest)
     const byDay = new Map<string, Entry>();
     for (const e of sorted) {
-        const day = e.CreatedAt.split('T')[0];
+        const day = e.created_at.split('T')[0];
         byDay.set(day, e);
     }
     const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
@@ -158,7 +158,7 @@ function renderWeightChart(history: Entry[]): void {
         const dt = new Date(d + 'T00:00:00');
         return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     });
-    const data = days.map(([, e]) => e.Value);
+    const data = days.map(([, e]) => e.value);
 
     const style = getComputedStyle(document.documentElement);
     const primary = style.getPropertyValue('--bs-primary').trim() || '#0d6efd';

@@ -28,7 +28,7 @@ func logFood(s *Spec) {
 		mcp.WithNumber("caffeine", mcp.Description("Caffeine in milligrams")),
 		mcp.WithNumber("cholesterol", mcp.Description("Cholesterol in milligrams")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
-		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp; defaults to now"), mcp.Required()),
+		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset (e.g. 2026-02-08T17:30:00-05:00); defaults to now UTC"), mcp.Required()),
 	)
 
 	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

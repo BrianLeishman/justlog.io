@@ -13,22 +13,22 @@ import (
 )
 
 type Entry struct {
-	UID         string  `dynamodbav:"uid"`
-	SK          string  `dynamodbav:"sk"`
-	Type        string  `dynamodbav:"type"`
-	Description string  `dynamodbav:"description,omitempty"`
-	Calories    float64 `dynamodbav:"calories,omitempty"`
-	Protein     float64 `dynamodbav:"protein,omitempty"`
-	Carbs       float64 `dynamodbav:"carbs,omitempty"`
-	Fat         float64 `dynamodbav:"fat,omitempty"`
-	Fiber       float64 `dynamodbav:"fiber,omitempty"`
-	Caffeine    float64 `dynamodbav:"caffeine,omitempty"`
-	Cholesterol float64 `dynamodbav:"cholesterol,omitempty"`
-	Duration    float64 `dynamodbav:"duration,omitempty"`
-	Value       float64 `dynamodbav:"value,omitempty"`
-	Unit        string  `dynamodbav:"unit,omitempty"`
-	Notes       string  `dynamodbav:"notes,omitempty"`
-	CreatedAt   string  `dynamodbav:"createdAt"`
+	UID         string  `dynamodbav:"uid" json:"-"`
+	SK          string  `dynamodbav:"sk" json:"sk"`
+	Type        string  `dynamodbav:"type" json:"type"`
+	Description string  `dynamodbav:"description,omitempty" json:"description,omitempty"`
+	Calories    float64 `dynamodbav:"calories,omitempty" json:"calories,omitempty"`
+	Protein     float64 `dynamodbav:"protein,omitempty" json:"protein,omitempty"`
+	Carbs       float64 `dynamodbav:"carbs,omitempty" json:"carbs,omitempty"`
+	Fat         float64 `dynamodbav:"fat,omitempty" json:"fat,omitempty"`
+	Fiber       float64 `dynamodbav:"fiber,omitempty" json:"fiber,omitempty"`
+	Caffeine    float64 `dynamodbav:"caffeine,omitempty" json:"caffeine,omitempty"`
+	Cholesterol float64 `dynamodbav:"cholesterol,omitempty" json:"cholesterol,omitempty"`
+	Duration    float64 `dynamodbav:"duration,omitempty" json:"duration,omitempty"`
+	Value       float64 `dynamodbav:"value,omitempty" json:"value,omitempty"`
+	Unit        string  `dynamodbav:"unit,omitempty" json:"unit,omitempty"`
+	Notes       string  `dynamodbav:"notes,omitempty" json:"notes,omitempty"`
+	CreatedAt   string  `dynamodbav:"createdAt" json:"created_at"`
 }
 
 func MakeSK(entryType string) string {
@@ -80,6 +80,50 @@ func GetEntries(ctx context.Context, uid, entryType string, from, to time.Time) 
 		return nil, err
 	}
 	return entries, nil
+}
+
+func UpdateEntry(ctx context.Context, uid, sk string, fields map[string]interface{}) error {
+	if len(fields) == 0 {
+		return nil
+	}
+
+	db, err := Client()
+	if err != nil {
+		return err
+	}
+
+	expr := "SET "
+	names := map[string]string{}
+	values := map[string]types.AttributeValue{}
+	i := 0
+	for k, v := range fields {
+		if i > 0 {
+			expr += ", "
+		}
+		alias := fmt.Sprintf("#f%d", i)
+		placeholder := fmt.Sprintf(":v%d", i)
+		expr += alias + " = " + placeholder
+		names[alias] = k
+
+		av, err := attributevalue.Marshal(v)
+		if err != nil {
+			return fmt.Errorf("marshal field %s: %w", k, err)
+		}
+		values[placeholder] = av
+		i++
+	}
+
+	_, err = db.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(TableName),
+		Key: map[string]types.AttributeValue{
+			"uid": &types.AttributeValueMemberS{Value: uid},
+			"sk":  &types.AttributeValueMemberS{Value: sk},
+		},
+		UpdateExpression:          aws.String(expr),
+		ExpressionAttributeNames:  names,
+		ExpressionAttributeValues: values,
+	})
+	return err
 }
 
 func DeleteEntry(ctx context.Context, uid, sk string) error {
