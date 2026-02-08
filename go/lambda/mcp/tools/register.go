@@ -45,9 +45,37 @@ func All() []server.ServerTool {
 		if !s.skipProfileReq {
 			handler = withProfileCheck(handler)
 		}
+		handler = withContext(handler)
 		out[i] = server.ServerTool{Tool: s.tool, Handler: handler}
 	}
 	return out
+}
+
+func withContext(next server.ToolHandlerFunc) server.ToolHandlerFunc {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		uid, err := mcpauth.UserID(ctx)
+		if err != nil {
+			return next(ctx, req)
+		}
+
+		result, err := next(ctx, req)
+		if err != nil || result == nil {
+			return result, err
+		}
+
+		summary := buildContext(ctx, uid)
+
+		// Prepend context to the first text content block
+		for i, c := range result.Content {
+			if tc, ok := c.(mcp.TextContent); ok {
+				tc.Text = summary + tc.Text
+				result.Content[i] = tc
+				break
+			}
+		}
+
+		return result, err
+	}
 }
 
 func withProfileCheck(next server.ToolHandlerFunc) server.ToolHandlerFunc {
