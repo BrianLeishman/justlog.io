@@ -1,5 +1,8 @@
+import { Chart, registerables } from 'chart.js';
 import { getEntries, api } from './api';
 import type { Entry } from './api';
+
+Chart.register(...registerables);
 
 interface APIKeyInfo {
     key_id: string;
@@ -104,15 +107,98 @@ function renderExerciseTable(entries: Entry[]): string {
         </div>`;
 }
 
-function renderWeight(entries: Entry[]): string {
+const weightFmt = new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function renderWeightTable(entries: Entry[]): string {
     if (entries.length === 0) {
         return '<p class="text-body-secondary">No weight logged today.</p>';
     }
 
-    const latest = entries[0];
-    const weightFmt = new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    return `<p class="fs-4 fw-bold mb-0">${weightFmt.format(latest.Value)} ${latest.Unit || 'lbs'}</p>
-            <p class="text-body-secondary">${formatTime(latest.CreatedAt)}</p>`;
+    const rows = entries.map(e => `<tr>
+        <td>${formatTime(e.CreatedAt)}</td>
+        <td class="text-end">${weightFmt.format(e.Value)}</td>
+        <td>${e.Unit || 'lbs'}</td>
+        <td class="text-body-secondary">${e.Notes || ''}</td>
+    </tr>`).join('');
+
+    return `
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th class="text-end">Weight</th>
+                    <th>Unit</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+        </div>`;
+}
+
+function renderWeightChart(history: Entry[]): void {
+    const canvas = document.getElementById('weight-chart') as HTMLCanvasElement | null;
+    if (!canvas || history.length === 0) {
+        return;
+    }
+
+    // Sort oldest first for the chart
+    const sorted = [...history].sort((a, b) => a.CreatedAt.localeCompare(b.CreatedAt));
+
+    // Take one entry per day (latest)
+    const byDay = new Map<string, Entry>();
+    for (const e of sorted) {
+        const day = e.CreatedAt.split('T')[0];
+        byDay.set(day, e);
+    }
+    const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+    const labels = days.map(([d]) => {
+        const dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const data = days.map(([, e]) => e.Value);
+
+    const style = getComputedStyle(document.documentElement);
+    const primary = style.getPropertyValue('--bs-primary').trim() || '#0d6efd';
+    const textColor = style.getPropertyValue('--bs-body-color').trim() || '#dee2e6';
+    const gridColor = style.getPropertyValue('--bs-border-color').trim() || '#495057';
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Weight',
+                data,
+                borderColor: primary,
+                backgroundColor: primary + '33',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+            },
+            scales: {
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor },
+                },
+                y: {
+                    ticks: {
+                        color: textColor,
+                        callback: v => weightFmt.format(v as number),
+                    },
+                    grid: { color: gridColor },
+                },
+            },
+        },
+    });
 }
 
 async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
@@ -262,10 +348,12 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     container.innerHTML = '<p class="text-body-secondary">Loading...</p>';
 
     const today = new Date().toISOString().split('T')[0];
-    const [food, exercise, weight, keys] = await Promise.all([
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const [food, exercise, weight, weightHistory, keys] = await Promise.all([
         getEntries('food', today, today),
         getEntries('exercise', today, today),
         getEntries('weight', today, today),
+        getEntries('weight', thirtyDaysAgo, today),
         fetchAPIKeys(),
     ]);
 
@@ -281,12 +369,17 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
             </div>
             <div class="col-md-6">
                 <h4>Weight</h4>
-                ${renderWeight(weight)}
+                ${renderWeightTable(weight)}
+            </div>
+            <div class="col-12">
+                <h4>Weight Trend</h4>
+                ${weightHistory.length > 0 ? '<canvas id="weight-chart" height="100"></canvas>' : '<p class="text-body-secondary">No weight history yet. Log your weight to see trends.</p>'}
             </div>
             <div class="col-12 mt-4">
                 ${renderMcpSetup(keys)}
             </div>
         </div>`;
 
+    renderWeightChart(weightHistory);
     bindMcpButtons(() => renderDashboard(container));
 }
