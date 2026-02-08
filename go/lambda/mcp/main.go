@@ -46,37 +46,35 @@ func main() {
 	}
 
 	if isLambda {
-		// In Lambda: use a plain HTTP handler that processes JSON-RPC directly
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("request: %s %s", r.Method, r.URL.Path)
 
-			// Only handle POST for MCP JSON-RPC
-			if r.Method != http.MethodPost {
-				// Return 404 for any non-POST (OAuth discovery, GET, etc.)
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
+		// OAuth discovery
+		mux.HandleFunc("GET /.well-known/oauth-protected-resource", handleProtectedResource)
+		mux.HandleFunc("GET /.well-known/oauth-authorization-server", handleAuthServerMeta)
 
-			ctx := r.Context()
-			ctx = authenticateRequest(ctx, r)
+		// OAuth flow
+		mux.HandleFunc("GET /oauth/authorize", handleAuthorize)
+		mux.HandleFunc("GET /oauth/callback", handleCallback)
+		mux.HandleFunc("POST /oauth/token", handleToken)
+		mux.HandleFunc("POST /oauth/register", handleRegister)
 
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, "bad request", http.StatusBadRequest)
-				return
-			}
-
-			log.Printf("request body: %s", body)
-
-			resp := mcpServer.HandleMessage(ctx, body)
-			w.Header().Set("Content-Type", "application/json")
-			out, _ := json.Marshal(resp)
-			log.Printf("response: %s", out)
-			w.Write(out)
+		// MCP JSON-RPC
+		mux.HandleFunc("POST /mcp", func(w http.ResponseWriter, r *http.Request) {
+			handleMCP(w, r, mcpServer)
 		})
 
-		adapter := httpadapter.New(mux)
+		// Catch-all for MCP at root (backwards compat)
+		mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
+			handleMCP(w, r, mcpServer)
+		})
+
+		// Default: 404
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("unhandled: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		adapter := httpadapter.NewV2(mux)
 		lambda.Start(adapter.ProxyWithContext)
 	} else {
 		// Local: use StreamableHTTPServer for full MCP protocol support
@@ -92,6 +90,34 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
+
+func handleMCP(w http.ResponseWriter, r *http.Request, mcpServer *server.MCPServer) {
+	log.Printf("request: %s %s", r.Method, r.URL.Path)
+
+	ctx := r.Context()
+	ctx = authenticateRequest(ctx, r)
+
+	// Check auth — return 401 with WWW-Authenticate if not authenticated
+	if _, err := mcpauth.FromContext(ctx); err != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s/.well-known/oauth-protected-resource"`, baseURL))
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("request body: %s", body)
+
+	resp := mcpServer.HandleMessage(ctx, body)
+	w.Header().Set("Content-Type", "application/json")
+	out, _ := json.Marshal(resp)
+	log.Printf("response: %s", out)
+	w.Write(out)
 }
 
 func authenticateRequest(ctx context.Context, r *http.Request) context.Context {

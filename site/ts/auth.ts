@@ -131,14 +131,23 @@ export function getUser(): { email: string; name: string; picture: string } | nu
 const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
 
 async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
+    // Only create a new key if we don't already have one
+    if (localStorage.getItem('api_key')) {
+        return;
+    }
     try {
         const resp = await fetch(`${apiBase}/api/token`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${cognitoToken}` },
+            headers: {
+                'Authorization': `Bearer ${cognitoToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ label: 'Web UI' }),
         });
         if (resp.ok) {
             interface TokenResponse {
                 api_key: string;
+                key_id: string;
             }
             const data: TokenResponse = await resp.json() as TokenResponse;
             localStorage.setItem('api_key', data.api_key);

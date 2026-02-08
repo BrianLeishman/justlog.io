@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "deploy:api": "AWS_PROFILE=justlog bash scripts/deploy-api.sh",
+    "deploy:mcp": "AWS_PROFILE=justlog bash scripts/deploy-mcp.sh",
+    "deploy:site": "AWS_PROFILE=justlog bash scripts/deploy-site.sh",
+    "deploy:all": "npm run deploy:api && npm run deploy:mcp && npm run deploy:site"
+  }
+}

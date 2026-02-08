@@ -22,7 +22,7 @@ func main() {
 	handler := cors(mux)
 
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
-		adapter := httpadapter.New(handler)
+		adapter := httpadapter.NewV2(handler)
 		lambda.Start(adapter.ProxyWithContext)
 	} else {
 		log.Println("API server listening on :8080")
@@ -61,17 +61,45 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
-		key, err := dynamo.CreateAPIKey(r.Context(), u.Sub)
+		var req struct {
+			Label string `json:"label"`
+		}
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&req)
+		}
+		if req.Label == "" {
+			req.Label = "Web UI"
+		}
+
+		key, keyID, err := dynamo.CreateAPIKey(r.Context(), u.Sub, req.Label)
 		if err != nil {
 			log.Printf("create api key error: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"api_key": key})
+		json.NewEncoder(w).Encode(map[string]string{
+			"api_key": key,
+			"key_id":  keyID,
+		})
+
+	case http.MethodGet:
+		keys, err := dynamo.ListAPIKeys(r.Context(), u.Sub)
+		if err != nil {
+			log.Printf("list api keys error: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(keys)
 
 	case http.MethodDelete:
-		if err := dynamo.DeleteAPIKey(r.Context(), u.Sub); err != nil {
+		keyID := r.URL.Query().Get("id")
+		if keyID == "" {
+			http.Error(w, "id parameter required", http.StatusBadRequest)
+			return
+		}
+		if err := dynamo.DeleteAPIKey(r.Context(), u.Sub, keyID); err != nil {
 			log.Printf("delete api key error: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
