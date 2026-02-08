@@ -128,15 +128,13 @@ export function getUser(): { email: string; name: string; picture: string } | nu
     }
 }
 
-const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
-
 async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
-    // Only create a new key if we don't already have one
     if (localStorage.getItem('api_key')) {
         return;
     }
     try {
-        const resp = await fetch(`${apiBase}/api/token`, {
+        // Use raw fetch here to avoid circular import with api.ts
+        const resp = await fetch('https://k24xsd279c.execute-api.us-east-1.amazonaws.com/api/token', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${cognitoToken}`,
@@ -145,11 +143,7 @@ async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
             body: JSON.stringify({ label: 'Web UI' }),
         });
         if (resp.ok) {
-            interface TokenResponse {
-                api_key: string;
-                key_id: string;
-            }
-            const data: TokenResponse = await resp.json() as TokenResponse;
+            const data = await resp.json() as { api_key: string; key_id: string };
             localStorage.setItem('api_key', data.api_key);
         }
     } catch {

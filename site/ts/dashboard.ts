@@ -1,8 +1,5 @@
-import { getEntries } from './api';
+import { getEntries, api } from './api';
 import type { Entry } from './api';
-import { getAccessToken } from './auth';
-
-const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
 
 interface APIKeyInfo {
     key_id: string;
@@ -111,48 +108,30 @@ function renderWeight(entries: Entry[]): string {
 }
 
 async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
-    const token = getAccessToken();
-    if (!token) {
+    try {
+        const { data } = await api.get<APIKeyInfo[]>('/api/token');
+        return data ?? [];
+    } catch {
         return [];
     }
-    const resp = await fetch(`${apiBase}/api/token`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!resp.ok) {
-        return [];
-    }
-    return await resp.json() as APIKeyInfo[];
 }
 
 async function createAPIKey(label: string): Promise<{ api_key: string; key_id: string } | null> {
-    const token = getAccessToken();
-    if (!token) {
+    try {
+        const { data } = await api.post<{ api_key: string; key_id: string }>('/api/token', { label });
+        return data;
+    } catch {
         return null;
     }
-    const resp = await fetch(`${apiBase}/api/token`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ label }),
-    });
-    if (!resp.ok) {
-        return null;
-    }
-    return await resp.json() as { api_key: string; key_id: string };
 }
 
 async function deleteAPIKey(keyId: string): Promise<boolean> {
-    const token = getAccessToken();
-    if (!token) {
+    try {
+        await api.delete('/api/token', { params: { id: keyId } });
+        return true;
+    } catch {
         return false;
     }
-    const resp = await fetch(`${apiBase}/api/token?id=${encodeURIComponent(keyId)}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-    });
-    return resp.ok;
 }
 
 function renderKeyRow(key: APIKeyInfo): string {

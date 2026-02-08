@@ -1,8 +1,55 @@
-import { getAccessToken } from './auth';
+import axios from 'axios';
+import { getAccessToken, logout } from './auth';
 
-const apiBase = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
+export const api = axios.create({
+    baseURL: 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com',
+});
 
-interface Entry {
+api.interceptors.request.use(config => {
+    const token = getAccessToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+api.interceptors.response.use(
+    resp => resp,
+    error => {
+        if (!axios.isAxiosError(error) || !error.response) {
+            showError('Network error. Check your connection.');
+            return Promise.reject(error as Error);
+        }
+
+        const status = error.response.status;
+        const data: unknown = error.response.data;
+        if (status === 401) {
+            showError('Session expired. Please sign in again.');
+            logout();
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            const message = typeof data === 'string' ? data : error.message;
+            showError(`Request failed: ${message}`);
+        }
+
+        return Promise.reject(error as Error);
+    },
+);
+
+function showError(message: string): void {
+    document.getElementById('api-error-toast')?.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'api-error-toast';
+    toast.className = 'alert alert-danger alert-dismissible position-fixed bottom-0 end-0 m-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 8000);
+}
+
+export interface Entry {
     UID: string;
     SK: string;
     Type: string;
@@ -19,30 +66,23 @@ interface Entry {
     CreatedAt: string;
 }
 
-export type { Entry };
-
 export async function getEntries(type: string, from?: string, to?: string): Promise<Entry[]> {
-    const token = getAccessToken();
-    if (!token) {
+    if (!getAccessToken()) {
         return [];
     }
 
-    const params = new URLSearchParams({ type });
+    const params: Record<string, string> = { type };
     if (from) {
-        params.set('from', from);
+        params.from = from;
     }
     if (to) {
-        params.set('to', to);
+        params.to = to;
     }
 
-    const resp = await fetch(`${apiBase}/api/entries?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!resp.ok) {
+    try {
+        const { data } = await api.get<Entry[]>('/api/entries', { params });
+        return data ?? [];
+    } catch {
         return [];
     }
-
-    const data: Entry[] = await resp.json() as Entry[];
-    return data ?? [];
 }
