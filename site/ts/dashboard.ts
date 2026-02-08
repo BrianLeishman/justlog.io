@@ -186,11 +186,22 @@ function renderMcpSetup(keys: APIKeyInfo[]): string {
         </div>`;
 }
 
+function copyWithFeedback(btn: HTMLElement, text: string): void {
+    void navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+            btn.textContent = orig;
+        }, 1500);
+    });
+}
+
 function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
-    document.getElementById('copy-endpoint')?.addEventListener('click', () => {
-        const input = document.querySelector('#copy-endpoint')?.parentElement?.querySelector('input');
+    document.getElementById('copy-endpoint')?.addEventListener('click', e => {
+        const btn = e.currentTarget as HTMLElement;
+        const input = btn.parentElement?.querySelector('input');
         if (input) {
-            void navigator.clipboard.writeText(input.value);
+            copyWithFeedback(btn, input.value);
         }
     });
 
@@ -217,10 +228,10 @@ function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
         }
     });
 
-    document.getElementById('copy-new-key')?.addEventListener('click', () => {
+    document.getElementById('copy-new-key')?.addEventListener('click', e => {
         const value = document.getElementById('new-key-value');
         if (value?.textContent) {
-            void navigator.clipboard.writeText(value.textContent);
+            copyWithFeedback(e.currentTarget as HTMLElement, value.textContent);
         }
     });
 
