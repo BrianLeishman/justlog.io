@@ -97,7 +97,9 @@ func withProfileCheck(next server.ToolHandlerFunc) server.ToolHandlerFunc {
 			for _, f := range missing {
 				lines = append(lines, fmt.Sprintf("- %s: %s", f.Label, f.Description))
 			}
-			return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
+			result := mcp.NewToolResultText(strings.Join(lines, "\n"))
+			result.IsError = true
+			return result, nil
 		}
 
 		return next(ctx, req)
