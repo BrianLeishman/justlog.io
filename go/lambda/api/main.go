@@ -51,8 +51,7 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Must use Cognito auth here, not API key
-	u, err := mcpauth.FromCognito(r.Context(), token)
+	u, err := mcpauth.FromToken(r.Context(), token)
 	if err != nil {
 		log.Printf("auth error: %v", err)
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
