@@ -2,6 +2,8 @@ package dynamo
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -31,7 +33,9 @@ type Entry struct {
 }
 
 func MakeSK(entryType string, ts time.Time) string {
-	return entryType + "#" + ts.UTC().Format(time.RFC3339)
+	b := make([]byte, 4)
+	_, _ = rand.Read(b)
+	return entryType + "#" + ts.UTC().Format(time.RFC3339) + "#" + hex.EncodeToString(b)
 }
 
 func PutEntry(ctx context.Context, entry Entry) error {
