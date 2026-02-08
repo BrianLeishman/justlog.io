@@ -21,6 +21,8 @@ type Entry struct {
 	Carbs       float64 `dynamodbav:"carbs,omitempty"`
 	Fat         float64 `dynamodbav:"fat,omitempty"`
 	Fiber       float64 `dynamodbav:"fiber,omitempty"`
+	Caffeine    float64 `dynamodbav:"caffeine,omitempty"`
+	Cholesterol float64 `dynamodbav:"cholesterol,omitempty"`
 	Duration    float64 `dynamodbav:"duration,omitempty"`
 	Value       float64 `dynamodbav:"value,omitempty"`
 	Unit        string  `dynamodbav:"unit,omitempty"`

@@ -25,6 +25,8 @@ func logFood(s *Spec) {
 		mcp.WithNumber("carbs", mcp.Description("Carbohydrates in grams")),
 		mcp.WithNumber("fat", mcp.Description("Fat in grams")),
 		mcp.WithNumber("fiber", mcp.Description("Fiber in grams")),
+		mcp.WithNumber("caffeine", mcp.Description("Caffeine in milligrams")),
+		mcp.WithNumber("cholesterol", mcp.Description("Cholesterol in milligrams")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
 		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp; defaults to now"), mcp.Required()),
 	)
@@ -50,6 +52,8 @@ func logFood(s *Spec) {
 			Carbs:       req.GetFloat("carbs", 0),
 			Fat:         req.GetFloat("fat", 0),
 			Fiber:       req.GetFloat("fiber", 0),
+			Caffeine:    req.GetFloat("caffeine", 0),
+			Cholesterol: req.GetFloat("cholesterol", 0),
 			Notes:       req.GetString("notes", ""),
 			CreatedAt:   ts.Format(time.RFC3339),
 		}

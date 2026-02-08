@@ -59,6 +59,8 @@ export interface Entry {
     Carbs: number;
     Fat: number;
     Fiber: number;
+    Caffeine: number;
+    Cholesterol: number;
     Duration: number;
     Value: number;
     Unit: string;

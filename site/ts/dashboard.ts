@@ -19,7 +19,7 @@ function num(v: number): string {
 }
 
 function renderFoodTable(entries: Entry[]): string {
-    let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0;
+    let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0, totalCaff = 0, totalChol = 0;
 
     const rows = entries.map(e => {
         totalCal += e.Calories;
@@ -27,6 +27,8 @@ function renderFoodTable(entries: Entry[]): string {
         totalC += e.Carbs;
         totalFat += e.Fat;
         totalFiber += e.Fiber;
+        totalCaff += e.Caffeine;
+        totalChol += e.Cholesterol;
         return `<tr>
             <td>${formatTime(e.CreatedAt)}</td>
             <td>${e.Description}</td>
@@ -35,6 +37,8 @@ function renderFoodTable(entries: Entry[]): string {
             <td class="text-end">${num(e.Carbs)}</td>
             <td class="text-end">${num(e.Fat)}</td>
             <td class="text-end">${num(e.Fiber)}</td>
+            <td class="text-end">${num(e.Caffeine)}</td>
+            <td class="text-end">${num(e.Cholesterol)}</td>
         </tr>`;
     }).join('');
 
@@ -50,6 +54,8 @@ function renderFoodTable(entries: Entry[]): string {
                     <th class="text-end">Carbs</th>
                     <th class="text-end">Fat</th>
                     <th class="text-end">Fiber</th>
+                    <th class="text-end">Caffeine</th>
+                    <th class="text-end">Chol</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -62,6 +68,8 @@ function renderFoodTable(entries: Entry[]): string {
                     <td class="text-end">${num(totalC)}g</td>
                     <td class="text-end">${num(totalFat)}g</td>
                     <td class="text-end">${num(totalFiber)}g</td>
+                    <td class="text-end">${num(totalCaff)}mg</td>
+                    <td class="text-end">${num(totalChol)}mg</td>
                 </tr>
             </tfoot>
         </table>
