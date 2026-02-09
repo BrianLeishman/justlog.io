@@ -26,6 +26,7 @@ var ProfileFields = []ProfileField{
 	{Key: "diet", Label: "Diet", Description: "Are you on a diet or would like to be? If so, what diet? (e.g. keto, Mediterranean, calorie counting, none)"},
 	{Key: "goal", Label: "Goal", Description: "What is your reason for using this app? (e.g. weight loss, muscle gain, general health tracking)"},
 	{Key: "lifestyle", Label: "Lifestyle", Description: "How does your typical day look? Do you work at a desk? Are you usually active? (e.g. sedentary office job, active construction work, stay-at-home parent)"},
+	{Key: "birthdate", Label: "Birthdate", Description: "What is your date of birth? (e.g. 1990-05-15, March 3 1985)"},
 }
 
 // AutoFields are set automatically (not asked by AI). They are still required.
@@ -49,6 +50,31 @@ func (p Profile) Timezone() *time.Location {
 		return time.UTC
 	}
 	return loc
+}
+
+// Age returns the user's age in years based on their birthdate, or -1 if unknown.
+func (p Profile) Age(now time.Time) int {
+	raw := p["birthdate"]
+	if raw == "" {
+		return -1
+	}
+	// Try common formats
+	var bd time.Time
+	var err error
+	for _, fmt := range []string{"2006-01-02", "January 2 2006", "Jan 2 2006", "01/02/2006", "1/2/2006"} {
+		bd, err = time.Parse(fmt, raw)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return -1
+	}
+	age := now.Year() - bd.Year()
+	if now.YearDay() < bd.YearDay() {
+		age--
+	}
+	return age
 }
 
 // Profile is a map of field key to value.

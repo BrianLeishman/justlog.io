@@ -25,6 +25,9 @@ func buildContext(ctx context.Context, uid string) string {
 				b.WriteString(fmt.Sprintf("- %s: %s\n", f.Label, v))
 			}
 		}
+		if age := profile.Age(time.Now()); age >= 0 {
+			b.WriteString(fmt.Sprintf("- Age: %d years old\n", age))
+		}
 	}
 
 	loc := profile.Timezone()
