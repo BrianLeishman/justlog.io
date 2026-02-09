@@ -1,7 +1,7 @@
 import { Chart, registerables } from 'chart.js';
 import * as bootstrap from 'bootstrap';
 import { getEntries, api } from './api';
-import { logout } from './auth';
+import { logout, getApiKeyId } from './auth';
 import type { Entry } from './api';
 
 Chart.register(...registerables);
@@ -141,26 +141,31 @@ function renderWeightTable(entries: Entry[]): string {
 
 function renderWeightChart(history: Entry[]): void {
     const canvas = document.getElementById('weight-chart') as HTMLCanvasElement | null;
-    if (!canvas || history.length === 0) {
+    if (!canvas) {
         return;
     }
 
-    // Sort oldest first for the chart
-    const sorted = [...history].sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-    // Take one entry per day (latest)
+    // Build a map of day -> latest entry
     const byDay = new Map<string, Entry>();
-    for (const e of sorted) {
+    for (const e of history) {
         const day = e.created_at.split('T')[0];
-        byDay.set(day, e);
+        const existing = byDay.get(day);
+        if (!existing || e.created_at > existing.created_at) {
+            byDay.set(day, e);
+        }
     }
-    const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-    const labels = days.map(([d]) => {
-        const dt = new Date(d + 'T00:00:00');
-        return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    });
-    const data = days.map(([, e]) => e.value);
+    // Generate all 30 days as labels, with null for missing days
+    const labels: string[] = [];
+    const data: (number | null)[] = [];
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        labels.push(d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+        const entry = byDay.get(key);
+        data.push(entry ? entry.value : null);
+    }
 
     const style = getComputedStyle(document.documentElement);
     const primary = style.getPropertyValue('--bs-primary').trim() || '#0d6efd';
@@ -176,9 +181,10 @@ function renderWeightChart(history: Entry[]): void {
                 data,
                 borderColor: primary,
                 backgroundColor: primary + '33',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 3,
+                pointRadius: 5,
+                pointBackgroundColor: primary,
+                showLine: false,
+                spanGaps: false,
             }],
         },
         options: {
@@ -233,15 +239,17 @@ async function deleteAPIKey(keyId: string): Promise<boolean> {
 
 function renderKeyRow(key: APIKeyInfo): string {
     const created = new Date(key.created_at).toLocaleDateString();
-    const isWebUI = key.label === 'Web UI';
+    const isCurrentSession = key.key_id === getApiKeyId();
+    let badge = '';
     let actionBtn: string;
-    if (isWebUI) {
+    if (isCurrentSession) {
+        badge = ' <span class="badge text-bg-secondary">current session</span>';
         actionBtn = `<button class="btn btn-outline-warning btn-sm delete-key-btn" data-key-id="${key.key_id}" data-is-session="true" data-bs-toggle="tooltip" data-bs-title="This will log you out">Revoke session</button>`;
     } else {
         actionBtn = `<button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>`;
     }
     return `<tr data-key-id="${key.key_id}">
-        <td>${key.label || 'Untitled'}${isWebUI ? ' <span class="badge text-bg-secondary">current session</span>' : ''}</td>
+        <td>${key.label || 'Untitled'}${badge}</td>
         <td class="text-body-secondary">${created}</td>
         <td class="text-end">${actionBtn}</td>
     </tr>`;
@@ -385,9 +393,9 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
         fetchAPIKeys(),
     ]);
 
-    const todayCal = food.reduce((s, e) => s + e.calories, 0);
-    const avg7Cal = food7.length > 0 ? food7.reduce((s, e) => s + e.calories, 0) / 7 : 0;
-    const avg30Cal = food30.length > 0 ? food30.reduce((s, e) => s + e.calories, 0) / 30 : 0;
+    const todayCal = food.reduce((s, e) => s + Number(e.calories || 0), 0);
+    const avg7Cal = food7.length > 0 ? food7.reduce((s, e) => s + Number(e.calories || 0), 0) / 7 : 0;
+    const avg30Cal = food30.length > 0 ? food30.reduce((s, e) => s + Number(e.calories || 0), 0) / 30 : 0;
 
     container.innerHTML = `
         <div class="row g-4">
@@ -429,7 +437,7 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
             </div>
             <div class="col-12">
                 <h4>Weight Trend</h4>
-                ${weightHistory.length > 0 ? '<canvas id="weight-chart" height="100"></canvas>' : '<p class="text-body-secondary">No weight history yet. Log your weight to see trends.</p>'}
+                <canvas id="weight-chart" height="100"></canvas>
             </div>
             <div class="col-12 mt-4">
                 ${renderMcpSetup(keys)}

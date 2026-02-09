@@ -174,6 +174,7 @@ async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
         if (resp.ok) {
             const data = await resp.json() as { api_key: string; key_id: string };
             localStorage.setItem('api_key', data.api_key);
+            localStorage.setItem('api_key_id', data.key_id);
         }
     } catch {
         // If exchange fails, we still have the Cognito token as fallback
@@ -198,6 +199,10 @@ async function saveTimezone(): Promise<void> {
     } catch { /* best effort */ }
 }
 
+export function getApiKeyId(): string | null {
+    return localStorage.getItem('api_key_id');
+}
+
 export function getAccessToken(): string | null {
     return localStorage.getItem('api_key') ?? localStorage.getItem('access_token');
 }
@@ -211,5 +216,6 @@ export function logout(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('api_key');
+    localStorage.removeItem('api_key_id');
     localStorage.removeItem('user_info');
 }
