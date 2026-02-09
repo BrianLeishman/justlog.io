@@ -32,6 +32,17 @@
         {{ block "main" . }}{{ end }}
     </main>
 
+    <footer class="container py-4 mt-5 border-top">
+        <div class="d-flex flex-wrap justify-content-between align-items-center text-body-secondary small">
+            <span>&copy; {{ now.Year }} JustLog</span>
+            <div class="d-flex gap-3">
+                <a href="/terms/" class="text-body-secondary text-decoration-none">Terms</a>
+                <a href="/privacy/" class="text-body-secondary text-decoration-none">Privacy</a>
+                <a href="https://github.com/BrianLeishman/justlog.io" class="text-body-secondary text-decoration-none" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
     {{ with resources.Get "js/app.js" | fingerprint }}
         <script type="module" src="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}"></script>
     {{ end }}
