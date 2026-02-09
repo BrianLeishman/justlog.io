@@ -92,12 +92,11 @@ func handleAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to Cognito, encoding our session ID in the state
 	cognitoParams := url.Values{
-		"client_id":         {cognitoClient},
-		"response_type":     {"code"},
-		"scope":             {"openid email profile"},
-		"redirect_uri":      {baseURL + "/oauth/callback"},
-		"state":             {sessionID},
-		"identity_provider": {"Google"},
+		"client_id":     {cognitoClient},
+		"response_type": {"code"},
+		"scope":         {"openid email profile"},
+		"redirect_uri":  {baseURL + "/oauth/callback"},
+		"state":         {sessionID},
 	}
 	http.Redirect(w, r, cognitoDomain+"/oauth2/authorize?"+cognitoParams.Encode(), http.StatusFound)
 }

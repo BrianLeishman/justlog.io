@@ -41,7 +41,6 @@ export async function login(): Promise<void> {
         redirect_uri: redirectUri(),
         code_challenge_method: 'S256',
         code_challenge: codeChallenge,
-        identity_provider: 'Google',
     });
 
     window.location.href = `${cognitoDomain}/oauth2/authorize?${params.toString()}`;
@@ -93,11 +92,11 @@ export async function handleCallback(): Promise<boolean> {
 
     // Persist user info from id_token so it survives token expiry
     try {
-        const payload = JSON.parse(atob(tokens.id_token.split('.')[1])) as { email: string; name: string; picture: string };
+        const payload = JSON.parse(atob(tokens.id_token.split('.')[1])) as { email?: string; name?: string; picture?: string };
         localStorage.setItem('user_info', JSON.stringify({
-            email: payload.email,
-            name: payload.name,
-            picture: payload.picture,
+            email: payload.email ?? '',
+            name: payload.name || payload.email || '',
+            picture: payload.picture ?? '',
         }));
     } catch { /* best effort */ }
 
@@ -127,7 +126,7 @@ export function getUser(): { email: string; name: string; picture: string } | nu
     }
 
     try {
-        const payload = JSON.parse(atob(idToken.split('.')[1])) as { exp: number; email: string; name: string; picture: string };
+        const payload = JSON.parse(atob(idToken.split('.')[1])) as { exp: number; email?: string; name?: string; picture?: string };
 
         if (payload.exp * 1000 < Date.now()) {
             // Token expired and no API key — fully logged out
@@ -138,9 +137,9 @@ export function getUser(): { email: string; name: string; picture: string } | nu
         }
 
         return {
-            email: payload.email,
-            name: payload.name,
-            picture: payload.picture,
+            email: payload.email ?? '',
+            name: payload.name || payload.email || '',
+            picture: payload.picture ?? '',
         };
     } catch {
         return null;
