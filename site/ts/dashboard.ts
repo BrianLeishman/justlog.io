@@ -192,6 +192,7 @@ function renderWeightChart(history: Entry[]): void {
                     grid: { color: gridColor },
                 },
                 y: {
+                    beginAtZero: true,
                     ticks: {
                         color: textColor,
                         callback: v => weightFmt.format(v as number),
@@ -372,16 +373,48 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const ago = new Date(Date.now() - 30 * 86400000);
     const thirtyDaysAgo = `${ago.getFullYear()}-${String(ago.getMonth() + 1).padStart(2, '0')}-${String(ago.getDate()).padStart(2, '0')}`;
-    const [food, exercise, weight, weightHistory, keys] = await Promise.all([
+    const ago7 = new Date(Date.now() - 7 * 86400000);
+    const sevenDaysAgo = `${ago7.getFullYear()}-${String(ago7.getMonth() + 1).padStart(2, '0')}-${String(ago7.getDate()).padStart(2, '0')}`;
+    const [food, exercise, weight, weightHistory, food7, food30, keys] = await Promise.all([
         getEntries('food', today, today),
         getEntries('exercise', today, today),
         getEntries('weight', today, today),
         getEntries('weight', thirtyDaysAgo, today),
+        getEntries('food', sevenDaysAgo, today),
+        getEntries('food', thirtyDaysAgo, today),
         fetchAPIKeys(),
     ]);
 
+    const todayCal = food.reduce((s, e) => s + e.calories, 0);
+    const avg7Cal = food7.length > 0 ? food7.reduce((s, e) => s + e.calories, 0) / 7 : 0;
+    const avg30Cal = food30.length > 0 ? food30.reduce((s, e) => s + e.calories, 0) / 30 : 0;
+
     container.innerHTML = `
         <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-body-secondary small">Calories Today</div>
+                        <div class="fs-2 fw-bold">${todayCal > 0 ? numFmt.format(Math.round(todayCal)) : '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-body-secondary small">Avg Cal / Day (7d)</div>
+                        <div class="fs-2 fw-bold">${avg7Cal > 0 ? numFmt.format(Math.round(avg7Cal)) : '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-body-secondary small">Avg Cal / Day (30d)</div>
+                        <div class="fs-2 fw-bold">${avg30Cal > 0 ? numFmt.format(Math.round(avg30Cal)) : '-'}</div>
+                    </div>
+                </div>
+            </div>
             <div class="col-12">
                 <h4>Food</h4>
                 ${food.length > 0 ? renderFoodTable(food) : '<p class="text-body-secondary">No food logged today. Tell your AI assistant what you ate!</p>'}
