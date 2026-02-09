@@ -15,6 +15,9 @@ func buildContext(ctx context.Context, uid string) string {
 
 	// Profile
 	profile, err := dynamo.GetProfile(ctx, uid)
+	if profile == nil {
+		profile = dynamo.Profile{}
+	}
 	if err == nil && len(profile) > 0 {
 		b.WriteString("\n## Profile\n")
 		for _, f := range dynamo.ProfileFields {
@@ -24,17 +27,18 @@ func buildContext(ctx context.Context, uid string) string {
 		}
 	}
 
-	now := time.Now().UTC()
-	todayEnd := now
-	todayStart := now.Add(-24 * time.Hour)
-	sevenAgo := now.AddDate(0, 0, -7)
-	thirtyAgo := now.AddDate(0, 0, -30)
+	loc := profile.Timezone()
+	now := time.Now().In(loc)
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).UTC()
+	todayEnd := todayStart.Add(24 * time.Hour)
+	sevenAgo := todayStart.AddDate(0, 0, -7)
+	thirtyAgo := todayStart.AddDate(0, 0, -30)
 
 	// Today's food
 	food, _ := dynamo.GetEntries(ctx, uid, "food", todayStart, todayEnd)
-	b.WriteString("\n## Food (last 24h)\n")
+	b.WriteString("\n## Today's Food\n")
 	if len(food) == 0 {
-		b.WriteString("No food logged in the last 24 hours.\n")
+		b.WriteString("No food logged yet today.\n")
 	} else {
 		var totalCal, totalP, totalC, totalF, totalFib float64
 		for _, e := range food {
@@ -45,28 +49,28 @@ func buildContext(ctx context.Context, uid string) string {
 			totalF += e.Fat
 			totalFib += e.Fiber
 		}
-		b.WriteString(fmt.Sprintf("Last 24h totals: %.0f cal, %.0fg protein, %.0fg carbs, %.0fg fat, %.0fg fiber\n", totalCal, totalP, totalC, totalF, totalFib))
+		b.WriteString(fmt.Sprintf("Today's totals: %.0f cal, %.0fg protein, %.0fg carbs, %.0fg fat, %.0fg fiber\n", totalCal, totalP, totalC, totalF, totalFib))
 	}
 
 	// Today's exercise
 	exercise, _ := dynamo.GetEntries(ctx, uid, "exercise", todayStart, todayEnd)
-	b.WriteString("\n## Exercise (last 24h)\n")
+	b.WriteString("\n## Today's Exercise\n")
 	if len(exercise) == 0 {
-		b.WriteString("No exercise logged in the last 24 hours.\n")
+		b.WriteString("No exercise logged yet today.\n")
 	} else {
 		var totalBurned float64
 		for _, e := range exercise {
 			b.WriteString(fmt.Sprintf("- %s — %.0f min, %.0f cal burned\n", e.Description, e.Duration, e.Calories))
 			totalBurned += e.Calories
 		}
-		b.WriteString(fmt.Sprintf("Last 24h total burned: %.0f cal\n", totalBurned))
+		b.WriteString(fmt.Sprintf("Today's total burned: %.0f cal\n", totalBurned))
 	}
 
 	// Today's weight
 	weight, _ := dynamo.GetEntries(ctx, uid, "weight", todayStart, todayEnd)
-	b.WriteString("\n## Weight (last 24h)\n")
+	b.WriteString("\n## Today's Weight\n")
 	if len(weight) == 0 {
-		b.WriteString("No weight logged in the last 24 hours.\n")
+		b.WriteString("No weight logged today.\n")
 	} else {
 		for _, e := range weight {
 			b.WriteString(fmt.Sprintf("- %.1f %s\n", e.Value, e.Unit))

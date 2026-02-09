@@ -3,6 +3,7 @@ package dynamo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -27,10 +28,34 @@ var ProfileFields = []ProfileField{
 	{Key: "lifestyle", Label: "Lifestyle", Description: "How does your typical day look? Do you work at a desk? Are you usually active? (e.g. sedentary office job, active construction work, stay-at-home parent)"},
 }
 
+// AutoFields are set automatically (not asked by AI). They are still required.
+var AutoFields = []ProfileField{
+	{Key: "timezone", Label: "Timezone", Description: "IANA timezone (e.g. America/New_York). Set automatically from browser."},
+}
+
+// AllRequiredFields returns both user-facing and auto fields.
+func AllRequiredFields() []ProfileField {
+	return append(ProfileFields, AutoFields...)
+}
+
+// Timezone returns the user's timezone location, falling back to UTC.
+func (p Profile) Timezone() *time.Location {
+	tz := p["timezone"]
+	if tz == "" {
+		return time.UTC
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.UTC
+	}
+	return loc
+}
+
 // Profile is a map of field key to value.
 type Profile map[string]string
 
-// MissingFields returns the keys of required fields that are empty or missing.
+// MissingFields returns the user-facing fields that are empty or missing.
+// Auto fields (like timezone) are not included since they're set programmatically.
 func (p Profile) MissingFields() []ProfileField {
 	var missing []ProfileField
 	for _, f := range ProfileFields {
@@ -68,7 +93,7 @@ func GetProfile(ctx context.Context, uid string) (Profile, error) {
 		return nil, fmt.Errorf("unmarshal profile: %w", err)
 	}
 
-	for _, f := range ProfileFields {
+	for _, f := range AllRequiredFields() {
 		if v, ok := raw[f.Key]; ok {
 			p[f.Key] = v
 		}

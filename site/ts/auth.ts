@@ -104,6 +104,9 @@ export async function handleCallback(): Promise<boolean> {
     // Exchange Cognito token for long-lived API key
     await exchangeForAPIKey(tokens.access_token);
 
+    // Save browser timezone to profile
+    await saveTimezone();
+
     return true;
 }
 
@@ -175,6 +178,24 @@ async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
     } catch {
         // If exchange fails, we still have the Cognito token as fallback
     }
+}
+
+async function saveTimezone(): Promise<void> {
+    const apiKey = localStorage.getItem('api_key');
+    if (!apiKey) {
+        return;
+    }
+    try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        await fetch('https://k24xsd279c.execute-api.us-east-1.amazonaws.com/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ timezone: tz }),
+        });
+    } catch { /* best effort */ }
 }
 
 export function getAccessToken(): string | null {
