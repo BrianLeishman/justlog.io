@@ -374,22 +374,32 @@ function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
     });
 }
 
+function fmtDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+let selectedDate: Date = new Date();
+
 export async function renderDashboard(container: HTMLElement): Promise<void> {
     container.innerHTML = '<p class="text-body-secondary">Loading...</p>';
 
     const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const ago = new Date(Date.now() - 30 * 86400000);
-    const thirtyDaysAgo = `${ago.getFullYear()}-${String(ago.getMonth() + 1).padStart(2, '0')}-${String(ago.getDate()).padStart(2, '0')}`;
-    const ago7 = new Date(Date.now() - 7 * 86400000);
-    const sevenDaysAgo = `${ago7.getFullYear()}-${String(ago7.getMonth() + 1).padStart(2, '0')}-${String(ago7.getDate()).padStart(2, '0')}`;
+    const today = fmtDate(selectedDate);
+    const isToday = fmtDate(now) === today;
+    const realToday = fmtDate(now);
+    const ago = new Date(now);
+    ago.setDate(ago.getDate() - 30);
+    const thirtyDaysAgo = fmtDate(ago);
+    const ago7 = new Date(now);
+    ago7.setDate(ago7.getDate() - 7);
+    const sevenDaysAgo = fmtDate(ago7);
     const [food, exercise, weight, weightHistory, food7, food30, keys] = await Promise.all([
         getEntries('food', today, today),
         getEntries('exercise', today, today),
         getEntries('weight', today, today),
-        getEntries('weight', thirtyDaysAgo, today),
-        getEntries('food', sevenDaysAgo, today),
-        getEntries('food', thirtyDaysAgo, today),
+        getEntries('weight', thirtyDaysAgo, realToday),
+        getEntries('food', sevenDaysAgo, realToday),
+        getEntries('food', thirtyDaysAgo, realToday),
         fetchAPIKeys(),
     ]);
 
@@ -399,12 +409,20 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     const days30WithCal = new Set(food30.filter(e => Number(e.calories || 0) > 0).map(e => e.created_at.split('T')[0])).size;
     const avg30Cal = days30WithCal > 0 ? food30.reduce((s, e) => s + Number(e.calories || 0), 0) / days30WithCal : 0;
 
+    const displayDate = selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
     container.innerHTML = `
+        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+            <button class="btn btn-outline-secondary btn-sm" id="date-prev" aria-label="Previous day"><i class="fa-solid fa-chevron-left"></i></button>
+            <input type="date" class="form-control form-control-sm" id="date-picker" value="${today}" max="${fmtDate(now)}" style="width:auto;">
+            <button class="btn btn-outline-secondary btn-sm" id="date-next" aria-label="Next day" ${isToday ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
+            ${isToday ? '' : '<button class=\'btn btn-outline-primary btn-sm\' id=\'date-today\'>Today</button>'}
+        </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card text-center">
                     <div class="card-body">
-                        <div class="text-body-secondary small">Calories Today</div>
+                        <div class="text-body-secondary small">Calories ${isToday ? 'Today' : displayDate}</div>
                         <div class="fs-2 fw-bold">${todayCal > 0 ? numFmt.format(Math.round(todayCal)) : '-'}</div>
                     </div>
                 </div>
@@ -427,7 +445,7 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
             </div>
             <div class="col-12">
                 <h4>Food</h4>
-                ${food.length > 0 ? renderFoodTable(food) : '<p class="text-body-secondary">No food logged today. Tell your AI assistant what you ate!</p>'}
+                ${food.length > 0 ? renderFoodTable(food) : `<p class="text-body-secondary">No food logged ${isToday ? 'today' : 'this day'}.</p>`}
             </div>
             <div class="col-md-6">
                 <h4>Exercise</h4>
@@ -448,4 +466,27 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
 
     renderWeightChart(weightHistory);
     bindMcpButtons(() => renderDashboard(container));
+
+    // Date navigation
+    const refresh = async () => renderDashboard(container);
+    document.getElementById('date-prev')?.addEventListener('click', () => {
+        selectedDate.setDate(selectedDate.getDate() - 1);
+        void refresh();
+    });
+    document.getElementById('date-next')?.addEventListener('click', () => {
+        selectedDate.setDate(selectedDate.getDate() + 1);
+        void refresh();
+    });
+    document.getElementById('date-today')?.addEventListener('click', () => {
+        selectedDate = new Date();
+        void refresh();
+    });
+    document.getElementById('date-picker')?.addEventListener('change', e => {
+        const val = (e.target as HTMLInputElement).value;
+        if (val) {
+            const [y, m, d] = val.split('-').map(Number);
+            selectedDate = new Date(y, m - 1, d);
+            void refresh();
+        }
+    });
 }
