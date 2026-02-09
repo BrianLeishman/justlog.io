@@ -91,6 +91,16 @@ export async function handleCallback(): Promise<boolean> {
         localStorage.setItem('refresh_token', tokens.refresh_token);
     }
 
+    // Persist user info from id_token so it survives token expiry
+    try {
+        const payload = JSON.parse(atob(tokens.id_token.split('.')[1])) as { email: string; name: string; picture: string };
+        localStorage.setItem('user_info', JSON.stringify({
+            email: payload.email,
+            name: payload.name,
+            picture: payload.picture,
+        }));
+    } catch { /* best effort */ }
+
     // Exchange Cognito token for long-lived API key
     await exchangeForAPIKey(tokens.access_token);
 
@@ -98,24 +108,30 @@ export async function handleCallback(): Promise<boolean> {
 }
 
 export function getUser(): { email: string; name: string; picture: string } | null {
+    // If we have persisted user info and a valid API key, use that
+    // (survives Cognito token expiry)
+    const stored = localStorage.getItem('user_info');
+    if (stored && localStorage.getItem('api_key')) {
+        try {
+            return JSON.parse(stored) as { email: string; name: string; picture: string };
+        } catch { /* fall through */ }
+    }
+
+    // Fallback: decode from id_token
     const idToken = localStorage.getItem('id_token');
     if (!idToken) {
         return null;
     }
 
     try {
-        interface IdTokenPayload {
-            exp: number;
-            email: string;
-            name: string;
-            picture: string;
-        }
-
-        const payload: IdTokenPayload = JSON.parse(atob(idToken.split('.')[1])) as IdTokenPayload;
+        const payload = JSON.parse(atob(idToken.split('.')[1])) as { exp: number; email: string; name: string; picture: string };
 
         if (payload.exp * 1000 < Date.now()) {
-            logout();
-            return null;
+            // Token expired and no API key — fully logged out
+            if (!localStorage.getItem('api_key')) {
+                logout();
+                return null;
+            }
         }
 
         return {
@@ -133,13 +149,23 @@ async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
         return;
     }
     try {
-        // Use raw fetch here to avoid circular import with api.ts
-        const resp = await fetch('https://k24xsd279c.execute-api.us-east-1.amazonaws.com/api/token', {
+        const base = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
+        const headers = { 'Authorization': `Bearer ${cognitoToken}`, 'Content-Type': 'application/json' };
+
+        // Check if a Web UI key already exists
+        const listResp = await fetch(`${base}/api/token`, { headers });
+        if (listResp.ok) {
+            const keys = await listResp.json() as { key_id: string; label: string }[];
+            const existing = keys.find(k => k.label === 'Web UI');
+            if (existing) {
+                // Key exists but we lost the secret — delete and recreate
+                await fetch(`${base}/api/token?id=${existing.key_id}`, { method: 'DELETE', headers });
+            }
+        }
+
+        const resp = await fetch(`${base}/api/token`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${cognitoToken}`,
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify({ label: 'Web UI' }),
         });
         if (resp.ok) {
@@ -164,4 +190,5 @@ export function logout(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('api_key');
+    localStorage.removeItem('user_info');
 }
