@@ -1,5 +1,7 @@
 import { Chart, registerables } from 'chart.js';
+import * as bootstrap from 'bootstrap';
 import { getEntries, api } from './api';
+import { logout } from './auth';
 import type { Entry } from './api';
 
 Chart.register(...registerables);
@@ -231,12 +233,16 @@ async function deleteAPIKey(keyId: string): Promise<boolean> {
 function renderKeyRow(key: APIKeyInfo): string {
     const created = new Date(key.created_at).toLocaleDateString();
     const isWebUI = key.label === 'Web UI';
+    let actionBtn: string;
+    if (isWebUI) {
+        actionBtn = `<button class="btn btn-outline-warning btn-sm delete-key-btn" data-key-id="${key.key_id}" data-is-session="true" data-bs-toggle="tooltip" data-bs-title="This will log you out">Revoke session</button>`;
+    } else {
+        actionBtn = `<button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>`;
+    }
     return `<tr data-key-id="${key.key_id}">
-        <td>${key.label || 'Untitled'}${isWebUI ? ' <span class="badge text-bg-secondary">browser</span>' : ''}</td>
+        <td>${key.label || 'Untitled'}${isWebUI ? ' <span class="badge text-bg-secondary">current session</span>' : ''}</td>
         <td class="text-body-secondary">${created}</td>
-        <td class="text-end">
-            ${isWebUI ? '' : `<button class="btn btn-outline-danger btn-sm delete-key-btn" data-key-id="${key.key_id}">Revoke</button>`}
-        </td>
+        <td class="text-end">${actionBtn}</td>
     </tr>`;
 }
 
@@ -329,16 +335,31 @@ function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
         }
     });
 
+    // Initialize Bootstrap tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el);
+    });
+
     document.querySelectorAll('.delete-key-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-            const keyId = (btn as HTMLElement).dataset.keyId;
+            const el = btn as HTMLElement;
+            const keyId = el.dataset.keyId;
             if (!keyId) {
                 return;
             }
-            if (!confirm('Revoke this API key? Any integrations using it will stop working.')) {
+            const isSession = el.dataset.isSession === 'true';
+            const msg = isSession
+                ? 'Revoke your current session? You will be logged out.'
+                : 'Revoke this API key? Any integrations using it will stop working.';
+            if (!confirm(msg)) {
                 return;
             }
             await deleteAPIKey(keyId);
+            if (isSession) {
+                logout();
+                window.location.reload();
+                return;
+            }
             await refreshDashboard();
         });
     });
