@@ -183,8 +183,8 @@ function renderWeightChart(history: Entry[]): void {
                 backgroundColor: primary + '33',
                 pointRadius: 5,
                 pointBackgroundColor: primary,
-                showLine: false,
-                spanGaps: false,
+                showLine: true,
+                spanGaps: true,
             }],
         },
         options: {
