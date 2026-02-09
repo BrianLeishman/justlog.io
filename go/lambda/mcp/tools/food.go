@@ -19,6 +19,8 @@ func init() {
 func logFood(s *Spec) {
 	s.Define("log_food",
 		mcp.WithDescription("Log a food entry with nutritional info. Use this when the user tells you what they ate."),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("description", mcp.Description("What was eaten, e.g. '2 eggs and toast'"), mcp.Required()),
 		mcp.WithNumber("calories", mcp.Description("Total calories")),
 		mcp.WithNumber("protein", mcp.Description("Protein in grams")),
@@ -69,6 +71,7 @@ func logFood(s *Spec) {
 func getFood(s *Spec) {
 	s.Define("get_food",
 		mcp.WithDescription("Get food entries for a date range. Defaults to today."),
+		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithString("from", mcp.Description("Start date, ISO 8601 (e.g. 2026-02-05)")),
 		mcp.WithString("to", mcp.Description("End date, ISO 8601 (e.g. 2026-02-05)")),
 	)

@@ -20,6 +20,8 @@ func init() {
 func updateFood(s *Spec) {
 	s.Define("update_food",
 		mcp.WithDescription("Update an existing food entry. Pass the entry's sk (sort key) and any fields to change."),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("sk", mcp.Description("The sort key of the entry to update"), mcp.Required()),
 		mcp.WithString("description", mcp.Description("New description")),
 		mcp.WithNumber("calories", mcp.Description("New calories")),
@@ -78,6 +80,8 @@ func updateFood(s *Spec) {
 func updateExercise(s *Spec) {
 	s.Define("update_exercise",
 		mcp.WithDescription("Update an existing exercise entry. Pass the entry's sk (sort key) and any fields to change."),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("sk", mcp.Description("The sort key of the entry to update"), mcp.Required()),
 		mcp.WithString("description", mcp.Description("New description")),
 		mcp.WithNumber("calories_burned", mcp.Description("New calories burned")),
@@ -126,6 +130,8 @@ func updateExercise(s *Spec) {
 func updateWeight(s *Spec) {
 	s.Define("update_weight",
 		mcp.WithDescription("Update an existing weight entry. Pass the entry's sk (sort key) and any fields to change."),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("sk", mcp.Description("The sort key of the entry to update"), mcp.Required()),
 		mcp.WithNumber("value", mcp.Description("New weight value")),
 		mcp.WithString("unit", mcp.Description("New unit: lbs or kg")),
@@ -172,6 +178,7 @@ func updateWeight(s *Spec) {
 func deleteEntry(s *Spec) {
 	s.Define("delete_entry",
 		mcp.WithDescription("Delete an entry by its sort key."),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("sk", mcp.Description("The sort key of the entry to delete"), mcp.Required()),
 	)
 
