@@ -347,8 +347,10 @@ function bindMcpButtons(refreshDashboard: () => Promise<void>): void {
 export async function renderDashboard(container: HTMLElement): Promise<void> {
     container.innerHTML = '<p class="text-body-secondary">Loading...</p>';
 
-    const today = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const ago = new Date(Date.now() - 30 * 86400000);
+    const thirtyDaysAgo = `${ago.getFullYear()}-${String(ago.getMonth() + 1).padStart(2, '0')}-${String(ago.getDate()).padStart(2, '0')}`;
     const [food, exercise, weight, weightHistory, keys] = await Promise.all([
         getEntries('food', today, today),
         getEntries('exercise', today, today),
