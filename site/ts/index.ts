@@ -21,7 +21,7 @@ async function init(): Promise<void> {
     if (user) {
         authContainer.innerHTML = `
             <div class="d-flex align-items-center gap-2">
-                <img src="${user.picture}" alt="" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer">
+                ${user.picture ? `<img src="${user.picture}" alt="" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer">` : ''}
                 <span class="d-none d-sm-inline">${user.name}</span>
                 <button class="btn btn-sm btn-outline-secondary" id="logout-btn">Sign out</button>
             </div>
@@ -38,7 +38,7 @@ async function init(): Promise<void> {
         }
     } else {
         authContainer.innerHTML = `
-            <button class="btn btn-sm btn-primary" id="login-btn">Sign in with Google</button>
+            <button class="btn btn-sm btn-primary" id="login-btn">Sign in</button>
         `;
         document.getElementById('login-btn')?.addEventListener('click', () => void login());
     }
