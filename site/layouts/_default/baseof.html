@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ block "title" . }}{{ if .IsHome }}{{ .Site.Title }} — Track Calories & Macros With Your AI Assistant{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}{{ end }}</title>
     <meta name="description" content="{{ .Site.Params.description | default "Track calories, macros, exercise, and weight through your AI assistant. No app needed — just talk." }}">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="{{ if .IsHome }}{{ .Site.Title }} — Track Calories & Macros With Your AI Assistant{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}">
+    <meta property="og:description" content="Track calories, macros, exercise, and weight through your AI assistant. No app needed — just talk.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ .Permalink }}">
 
     {{ $opts := dict "transpiler" "dartsass" "silenceDeprecations" (slice "import" "global-builtin" "color-functions") }}
     {{ $css := resources.Get "scss/main.scss" | toCSS $opts | minify | fingerprint }}
