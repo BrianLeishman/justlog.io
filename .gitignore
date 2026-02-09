@@ -8,6 +8,8 @@ site/assets/js/
 site/public/
 site/resources/
 site/.hugo_build.lock
+public/
+.hugo_build.lock
 
 # Go
 /bootstrap
