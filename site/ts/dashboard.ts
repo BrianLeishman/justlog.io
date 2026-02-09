@@ -394,8 +394,10 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     ]);
 
     const todayCal = food.reduce((s, e) => s + Number(e.calories || 0), 0);
-    const avg7Cal = food7.length > 0 ? food7.reduce((s, e) => s + Number(e.calories || 0), 0) / 7 : 0;
-    const avg30Cal = food30.length > 0 ? food30.reduce((s, e) => s + Number(e.calories || 0), 0) / 30 : 0;
+    const days7WithCal = new Set(food7.filter(e => Number(e.calories || 0) > 0).map(e => e.created_at.split('T')[0])).size;
+    const avg7Cal = days7WithCal > 0 ? food7.reduce((s, e) => s + Number(e.calories || 0), 0) / days7WithCal : 0;
+    const days30WithCal = new Set(food30.filter(e => Number(e.calories || 0) > 0).map(e => e.created_at.split('T')[0])).size;
+    const avg30Cal = days30WithCal > 0 ? food30.reduce((s, e) => s + Number(e.calories || 0), 0) / days30WithCal : 0;
 
     container.innerHTML = `
         <div class="row g-4">
