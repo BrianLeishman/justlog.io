@@ -27,6 +27,7 @@ var ProfileFields = []ProfileField{
 	{Key: "goal", Label: "Goal", Description: "What is your reason for using this app? (e.g. weight loss, muscle gain, general health tracking)"},
 	{Key: "lifestyle", Label: "Lifestyle", Description: "How does your typical day look? Do you work at a desk? Are you usually active? (e.g. sedentary office job, active construction work, stay-at-home parent)"},
 	{Key: "birthdate", Label: "Birthdate", Description: "What is your date of birth? (e.g. 1990-05-15, March 3 1985)"},
+	{Key: "sex", Label: "Sex", Description: "What is your biological sex? (male or female) This is used for metabolic calculations."},
 }
 
 // AutoFields are set automatically (not asked by AI). They are still required.
