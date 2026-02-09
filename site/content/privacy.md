@@ -8,7 +8,7 @@ JustLog ("we", "the service") respects your privacy. This policy explains what d
 
 ## What We Collect
 
-- **Account info:** Your name, email, and profile picture from Google OAuth, used to identify your account.
+- **Account info:** Your email address, and optionally your name and profile picture (if you sign in with Google), used to identify your account.
 - **Profile data:** Height, ideal weight, diet preferences, goals, lifestyle, and timezone — provided by you to personalize the experience.
 - **Logged entries:** Food, exercise, and weight entries you create through the service or via AI assistants.
 - **API keys:** Hashed keys for authenticating your sessions and integrations.
@@ -26,7 +26,7 @@ Your data is used solely to provide the JustLog service to you — displaying yo
 ## Third Parties
 
 - **AWS:** Our infrastructure runs on Amazon Web Services (DynamoDB, Lambda, S3, CloudFront, Cognito).
-- **Google:** Used for OAuth sign-in. We receive your name, email, and profile picture.
+- **Google:** Optionally used for sign-in. If you sign in with Google, we receive your name, email, and profile picture.
 - **AI Assistants:** When you connect an AI assistant via MCP, it can read and write your entries. You control which assistants have access through your API keys.
 
 We do not sell, rent, or share your personal data with any other third parties.

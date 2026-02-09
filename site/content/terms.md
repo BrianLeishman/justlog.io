@@ -14,7 +14,7 @@ You are responsible for the accuracy of the data you log. JustLog is not a medic
 
 ## Accounts
 
-You sign in via Google OAuth. You are responsible for maintaining the security of your account credentials and API keys.
+You sign in with email/password or Google OAuth. You are responsible for maintaining the security of your account credentials and API keys.
 
 ## Data
 

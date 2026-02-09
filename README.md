@@ -30,7 +30,7 @@ That's it. No barcode scanning, no food database searches, no manual data entry 
 - **API**: Pure Go HTTP server, deployed to AWS Lambda behind API Gateway
 - **MCP Server**: Go, `mark3labs/mcp-go`, Streamable HTTP transport, deployed to Lambda
 - **Database**: DynamoDB
-- **Auth**: AWS Cognito (Google sign-in supported)
+- **Auth**: AWS Cognito (email/password and Google sign-in)
 - **Hosting**: S3 + CloudFront with KVS-based blue-green deploys
 
 ## Project Structure
@@ -86,7 +86,7 @@ cd go/lambda/mcp && node deploy.js
 
 ## Authentication
 
-Users create an account through AWS Cognito. Google sign-in is supported. The MCP server and API require a valid bearer token for all operations. Each user's data is isolated.
+Users create an account through AWS Cognito with email/password or Google sign-in. The MCP server and API require a valid bearer token for all operations. Each user's data is isolated.
 
 ## MCP Server
 
