@@ -148,7 +148,7 @@ function renderWeightChart(history: Entry[]): void {
     // Build a map of day -> latest entry
     const byDay = new Map<string, Entry>();
     for (const e of history) {
-        const day = e.created_at.split('T')[0];
+        const day = fmtDate(new Date(e.created_at));
         const existing = byDay.get(day);
         if (!existing || e.created_at > existing.created_at) {
             byDay.set(day, e);
@@ -403,10 +403,11 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
         fetchAPIKeys(),
     ]);
 
+    const localDate = (iso: string) => fmtDate(new Date(iso));
     const todayCal = food.reduce((s, e) => s + Number(e.calories || 0), 0);
-    const days7WithCal = new Set(food7.filter(e => Number(e.calories || 0) > 0).map(e => e.created_at.split('T')[0])).size;
+    const days7WithCal = new Set(food7.filter(e => Number(e.calories || 0) > 0).map(e => localDate(e.created_at))).size;
     const avg7Cal = days7WithCal > 0 ? food7.reduce((s, e) => s + Number(e.calories || 0), 0) / days7WithCal : 0;
-    const days30WithCal = new Set(food30.filter(e => Number(e.calories || 0) > 0).map(e => e.created_at.split('T')[0])).size;
+    const days30WithCal = new Set(food30.filter(e => Number(e.calories || 0) > 0).map(e => localDate(e.created_at))).size;
     const avg30Cal = days30WithCal > 0 ? food30.reduce((s, e) => s + Number(e.calories || 0), 0) / days30WithCal : 0;
 
     const displayDate = selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
