@@ -154,17 +154,6 @@ async function exchangeForAPIKey(cognitoToken: string): Promise<void> {
         const base = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
         const headers = { 'Authorization': `Bearer ${cognitoToken}`, 'Content-Type': 'application/json' };
 
-        // Check if a Web UI key already exists
-        const listResp = await fetch(`${base}/api/token`, { headers });
-        if (listResp.ok) {
-            const keys = await listResp.json() as { key_id: string; label: string }[];
-            const existing = keys.find(k => k.label === 'Web UI');
-            if (existing) {
-                // Key exists but we lost the secret — delete and recreate
-                await fetch(`${base}/api/token?id=${existing.key_id}`, { method: 'DELETE', headers });
-            }
-        }
-
         const resp = await fetch(`${base}/api/token`, {
             method: 'POST',
             headers,
