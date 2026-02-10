@@ -29,6 +29,8 @@ func logFood(s *Spec) {
 		mcp.WithNumber("fiber", mcp.Description("Fiber in grams")),
 		mcp.WithNumber("caffeine", mcp.Description("Caffeine in milligrams")),
 		mcp.WithNumber("cholesterol", mcp.Description("Cholesterol in milligrams")),
+		mcp.WithNumber("sodium", mcp.Description("Sodium in milligrams")),
+		mcp.WithNumber("sugar", mcp.Description("Sugar in grams")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
 		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset (e.g. 2026-02-08T17:30:00-05:00); defaults to now UTC"), mcp.Required()),
 	)
@@ -56,6 +58,8 @@ func logFood(s *Spec) {
 			Fiber:       req.GetFloat("fiber", 0),
 			Caffeine:    req.GetFloat("caffeine", 0),
 			Cholesterol: req.GetFloat("cholesterol", 0),
+			Sodium:      req.GetFloat("sodium", 0),
+			Sugar:       req.GetFloat("sugar", 0),
 			Notes:       req.GetString("notes", ""),
 			CreatedAt:   ts.Format(time.RFC3339),
 		}

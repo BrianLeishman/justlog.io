@@ -60,6 +60,8 @@ export interface Entry {
     fiber: number;
     caffeine: number;
     cholesterol: number;
+    sodium: number;
+    sugar: number;
     duration: number;
     value: number;
     unit: string;

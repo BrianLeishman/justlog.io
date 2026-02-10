@@ -31,6 +31,8 @@ func updateFood(s *Spec) {
 		mcp.WithNumber("fiber", mcp.Description("New fiber in grams")),
 		mcp.WithNumber("caffeine", mcp.Description("New caffeine in mg")),
 		mcp.WithNumber("cholesterol", mcp.Description("New cholesterol in mg")),
+		mcp.WithNumber("sodium", mcp.Description("New sodium in mg")),
+		mcp.WithNumber("sugar", mcp.Description("New sugar in grams")),
 		mcp.WithString("timestamp", mcp.Description("New ISO 8601 timestamp")),
 		mcp.WithString("notes", mcp.Description("New notes")),
 	)
@@ -54,6 +56,8 @@ func updateFood(s *Spec) {
 		setFloat(fields, req, "fiber", "fiber")
 		setFloat(fields, req, "caffeine", "caffeine")
 		setFloat(fields, req, "cholesterol", "cholesterol")
+		setFloat(fields, req, "sodium", "sodium")
+		setFloat(fields, req, "sugar", "sugar")
 		if v := req.GetString("notes", ""); v != "" {
 			fields["notes"] = v
 		}

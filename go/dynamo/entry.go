@@ -24,6 +24,8 @@ type Entry struct {
 	Fiber       float64 `dynamodbav:"fiber,omitempty" json:"fiber,omitempty"`
 	Caffeine    float64 `dynamodbav:"caffeine,omitempty" json:"caffeine,omitempty"`
 	Cholesterol float64 `dynamodbav:"cholesterol,omitempty" json:"cholesterol,omitempty"`
+	Sodium      float64 `dynamodbav:"sodium,omitempty" json:"sodium,omitempty"`
+	Sugar       float64 `dynamodbav:"sugar,omitempty" json:"sugar,omitempty"`
 	Duration    float64 `dynamodbav:"duration,omitempty" json:"duration,omitempty"`
 	Value       float64 `dynamodbav:"value,omitempty" json:"value,omitempty"`
 	Unit        string  `dynamodbav:"unit,omitempty" json:"unit,omitempty"`

@@ -24,7 +24,7 @@ function num(v: number): string {
 }
 
 function renderFoodTable(entries: Entry[]): string {
-    let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0, totalCaff = 0, totalChol = 0;
+    let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0, totalCaff = 0, totalChol = 0, totalSodium = 0, totalSugar = 0;
 
     const rows = entries.map(e => {
         totalCal += e.calories || 0;
@@ -34,6 +34,8 @@ function renderFoodTable(entries: Entry[]): string {
         totalFiber += e.fiber || 0;
         totalCaff += e.caffeine || 0;
         totalChol += e.cholesterol || 0;
+        totalSodium += e.sodium || 0;
+        totalSugar += e.sugar || 0;
         return `<tr>
             <td>${formatTime(e.created_at)}</td>
             <td>${e.description}</td>
@@ -42,6 +44,8 @@ function renderFoodTable(entries: Entry[]): string {
             <td class="text-end">${num(e.carbs)}</td>
             <td class="text-end">${num(e.fat)}</td>
             <td class="text-end">${num(e.fiber)}</td>
+            <td class="text-end">${num(e.sodium)}</td>
+            <td class="text-end">${num(e.sugar)}</td>
             <td class="text-end">${num(e.caffeine)}</td>
             <td class="text-end">${num(e.cholesterol)}</td>
         </tr>`;
@@ -59,6 +63,8 @@ function renderFoodTable(entries: Entry[]): string {
                     <th class="text-end">Carbs</th>
                     <th class="text-end">Fat</th>
                     <th class="text-end">Fiber</th>
+                    <th class="text-end">Sodium</th>
+                    <th class="text-end">Sugar</th>
                     <th class="text-end">Caffeine</th>
                     <th class="text-end">Chol</th>
                 </tr>
@@ -73,6 +79,8 @@ function renderFoodTable(entries: Entry[]): string {
                     <td class="text-end">${totalC ? num(totalC) + 'g' : '-'}</td>
                     <td class="text-end">${totalFat ? num(totalFat) + 'g' : '-'}</td>
                     <td class="text-end">${totalFiber ? num(totalFiber) + 'g' : '-'}</td>
+                    <td class="text-end">${totalSodium ? num(totalSodium) + 'mg' : '-'}</td>
+                    <td class="text-end">${totalSugar ? num(totalSugar) + 'g' : '-'}</td>
                     <td class="text-end">${totalCaff ? num(totalCaff) + 'mg' : '-'}</td>
                     <td class="text-end">${totalChol ? num(totalChol) + 'mg' : '-'}</td>
                 </tr>
