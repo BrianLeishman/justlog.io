@@ -27,13 +27,13 @@ function renderFoodTable(entries: Entry[]): string {
     let totalCal = 0, totalP = 0, totalC = 0, totalFat = 0, totalFiber = 0, totalCaff = 0, totalChol = 0;
 
     const rows = entries.map(e => {
-        totalCal += e.calories;
-        totalP += e.protein;
-        totalC += e.carbs;
-        totalFat += e.fat;
-        totalFiber += e.fiber;
-        totalCaff += e.caffeine;
-        totalChol += e.cholesterol;
+        totalCal += e.calories || 0;
+        totalP += e.protein || 0;
+        totalC += e.carbs || 0;
+        totalFat += e.fat || 0;
+        totalFiber += e.fiber || 0;
+        totalCaff += e.caffeine || 0;
+        totalChol += e.cholesterol || 0;
         return `<tr>
             <td>${formatTime(e.created_at)}</td>
             <td>${e.description}</td>
