@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	_ "time/tzdata"
 
 	mcpauth "github.com/BrianLeishman/justlog.io/go/lambda/mcp/auth"
 	"github.com/BrianLeishman/justlog.io/go/lambda/mcp/tools"

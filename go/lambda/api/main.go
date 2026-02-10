@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/BrianLeishman/justlog.io/go/dynamo"
 	mcpauth "github.com/BrianLeishman/justlog.io/go/lambda/mcp/auth"
