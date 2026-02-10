@@ -387,6 +387,9 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
     const today = fmtDate(selectedDate);
     const isToday = fmtDate(now) === today;
     const realToday = fmtDate(now);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = fmtDate(yesterday);
     const ago = new Date(now);
     ago.setDate(ago.getDate() - 30);
     const thirtyDaysAgo = fmtDate(ago);
@@ -398,8 +401,8 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
         getEntries('exercise', today, today),
         getEntries('weight', today, today),
         getEntries('weight', thirtyDaysAgo, realToday),
-        getEntries('food', sevenDaysAgo, realToday),
-        getEntries('food', thirtyDaysAgo, realToday),
+        getEntries('food', sevenDaysAgo, yesterdayStr),
+        getEntries('food', thirtyDaysAgo, yesterdayStr),
         fetchAPIKeys(),
     ]);
 
@@ -431,7 +434,7 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
             <div class="col-md-4">
                 <div class="card text-center">
                     <div class="card-body">
-                        <div class="text-body-secondary small">Avg Cal / Day (7d)</div>
+                        <div class="text-body-secondary small">Avg Cal / Day (7d) <span class="badge rounded-pill text-bg-secondary" data-bs-toggle="tooltip" data-bs-title="Average of the previous 7 days, excluding today" style="cursor:help; font-size:.6em; vertical-align:middle;">i</span></div>
                         <div class="fs-2 fw-bold">${avg7Cal > 0 ? numFmt.format(Math.round(avg7Cal)) : '-'}</div>
                     </div>
                 </div>
@@ -439,7 +442,7 @@ export async function renderDashboard(container: HTMLElement): Promise<void> {
             <div class="col-md-4">
                 <div class="card text-center">
                     <div class="card-body">
-                        <div class="text-body-secondary small">Avg Cal / Day (30d)</div>
+                        <div class="text-body-secondary small">Avg Cal / Day (30d) <span class="badge rounded-pill text-bg-secondary" data-bs-toggle="tooltip" data-bs-title="Average of the previous 30 days, excluding today" style="cursor:help; font-size:.6em; vertical-align:middle;">i</span></div>
                         <div class="fs-2 fw-bold">${avg30Cal > 0 ? numFmt.format(Math.round(avg30Cal)) : '-'}</div>
                     </div>
                 </div>
