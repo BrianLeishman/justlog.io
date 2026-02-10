@@ -69,12 +69,12 @@ function renderFoodTable(entries: Entry[]): string {
                     <td></td>
                     <td>Total</td>
                     <td class="text-end">${num(totalCal)}</td>
-                    <td class="text-end">${num(totalP)}g</td>
-                    <td class="text-end">${num(totalC)}g</td>
-                    <td class="text-end">${num(totalFat)}g</td>
-                    <td class="text-end">${num(totalFiber)}g</td>
-                    <td class="text-end">${num(totalCaff)}mg</td>
-                    <td class="text-end">${num(totalChol)}mg</td>
+                    <td class="text-end">${totalP ? num(totalP) + 'g' : '-'}</td>
+                    <td class="text-end">${totalC ? num(totalC) + 'g' : '-'}</td>
+                    <td class="text-end">${totalFat ? num(totalFat) + 'g' : '-'}</td>
+                    <td class="text-end">${totalFiber ? num(totalFiber) + 'g' : '-'}</td>
+                    <td class="text-end">${totalCaff ? num(totalCaff) + 'mg' : '-'}</td>
+                    <td class="text-end">${totalChol ? num(totalChol) + 'mg' : '-'}</td>
                 </tr>
             </tfoot>
         </table>
