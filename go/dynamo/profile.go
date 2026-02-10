@@ -28,12 +28,11 @@ var ProfileFields = []ProfileField{
 	{Key: "lifestyle", Label: "Lifestyle", Description: "How does your typical day look? Do you work at a desk? Are you usually active? (e.g. sedentary office job, active construction work, stay-at-home parent)"},
 	{Key: "birthdate", Label: "Birthdate", Description: "What is your date of birth? (e.g. 1990-05-15, March 3 1985)"},
 	{Key: "sex", Label: "Sex", Description: "What is your biological sex? (male or female) This is used for metabolic calculations."},
+	{Key: "timezone", Label: "Timezone", Description: "What is your timezone? (e.g. America/New_York, America/Chicago, Europe/London). Must be a valid IANA timezone identifier."},
 }
 
 // AutoFields are set automatically (not asked by AI). They are still required.
-var AutoFields = []ProfileField{
-	{Key: "timezone", Label: "Timezone", Description: "IANA timezone (e.g. America/New_York). Set automatically from browser."},
-}
+var AutoFields = []ProfileField{}
 
 // AllRequiredFields returns both user-facing and auto fields.
 func AllRequiredFields() []ProfileField {
@@ -131,6 +130,12 @@ func GetProfile(ctx context.Context, uid string) (Profile, error) {
 func UpdateProfile(ctx context.Context, uid string, fields map[string]string) error {
 	if len(fields) == 0 {
 		return nil
+	}
+
+	if tz, ok := fields["timezone"]; ok {
+		if _, err := time.LoadLocation(tz); err != nil {
+			return fmt.Errorf("invalid timezone %q: must be a valid IANA timezone (e.g. America/New_York)", tz)
+		}
 	}
 
 	db, err := Client()
