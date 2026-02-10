@@ -139,12 +139,17 @@ func handleEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := time.Now().UTC()
-	from := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	to := from.AddDate(0, 0, 1)
+	loc := time.UTC
+	if profile, err := dynamo.GetProfile(r.Context(), u.Sub); err == nil && profile != nil {
+		loc = profile.Timezone()
+	}
+
+	now := time.Now().In(loc)
+	from := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).UTC()
+	to := from.Add(24 * time.Hour)
 
 	if v := q.Get("from"); v != "" {
-		t, err := time.Parse("2006-01-02", v)
+		t, err := time.ParseInLocation("2006-01-02", v, loc)
 		if err != nil {
 			http.Error(w, "invalid from date", http.StatusBadRequest)
 			return
@@ -152,7 +157,7 @@ func handleEntries(w http.ResponseWriter, r *http.Request) {
 		from = t.UTC()
 	}
 	if v := q.Get("to"); v != "" {
-		t, err := time.Parse("2006-01-02", v)
+		t, err := time.ParseInLocation("2006-01-02", v, loc)
 		if err != nil {
 			http.Error(w, "invalid to date", http.StatusBadRequest)
 			return

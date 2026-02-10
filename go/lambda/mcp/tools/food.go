@@ -82,16 +82,17 @@ func getFood(s *Spec) {
 			return nil, err
 		}
 
-		from, to := todayRange()
+		loc := userTimezone(ctx, uid)
+		from, to := todayRange(loc)
 		if v := req.GetString("from", ""); v != "" {
-			t, err := time.Parse("2006-01-02", v)
+			t, err := time.ParseInLocation("2006-01-02", v, loc)
 			if err != nil {
 				return nil, fmt.Errorf("invalid from date: %w", err)
 			}
 			from = t.UTC()
 		}
 		if v := req.GetString("to", ""); v != "" {
-			t, err := time.Parse("2006-01-02", v)
+			t, err := time.ParseInLocation("2006-01-02", v, loc)
 			if err != nil {
 				return nil, fmt.Errorf("invalid to date: %w", err)
 			}
@@ -123,9 +124,17 @@ func parseTimestamp(v string) (time.Time, error) {
 	return t.UTC(), nil
 }
 
-func todayRange() (time.Time, time.Time) {
-	now := time.Now().UTC()
-	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(0, 0, 1)
+func todayRange(loc *time.Location) (time.Time, time.Time) {
+	now := time.Now().In(loc)
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).UTC()
+	end := start.Add(24 * time.Hour)
 	return start, end
+}
+
+func userTimezone(ctx context.Context, uid string) *time.Location {
+	profile, err := dynamo.GetProfile(ctx, uid)
+	if err != nil || profile == nil {
+		return time.UTC
+	}
+	return profile.Timezone()
 }
