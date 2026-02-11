@@ -138,6 +138,18 @@ func UpdateProfile(ctx context.Context, uid string, fields map[string]string) er
 		}
 	}
 
+	if sex, ok := fields["sex"]; ok {
+		if sex != "male" && sex != "female" {
+			return fmt.Errorf("invalid sex %q: must be \"male\" or \"female\"", sex)
+		}
+	}
+
+	if bd, ok := fields["birthdate"]; ok {
+		if _, err := time.Parse("2006-01-02", bd); err != nil {
+			return fmt.Errorf("invalid birthdate %q: must be YYYY-MM-DD format", bd)
+		}
+	}
+
 	db, err := Client()
 	if err != nil {
 		return err

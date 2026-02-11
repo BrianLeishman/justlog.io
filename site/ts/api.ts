@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { getAccessToken, logout } from './auth';
 
+const apiBase = document.querySelector<HTMLMetaElement>('meta[name="api-base"]')?.content
+    ?? 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
+
 export const api = axios.create({
-    baseURL: 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com',
+    baseURL: apiBase,
 });
 
 api.interceptors.request.use(config => {
@@ -56,6 +59,7 @@ export interface Entry {
     calories: number;
     protein: number;
     carbs: number;
+    net_carbs: number;
     fat: number;
     fiber: number;
     caffeine: number;
@@ -67,6 +71,15 @@ export interface Entry {
     unit: string;
     notes: string;
     created_at: string;
+}
+
+export async function getProfile(): Promise<Record<string, string>> {
+    const { data } = await api.get<Record<string, string>>('/api/profile');
+    return data ?? {};
+}
+
+export async function updateProfileField(key: string, value: string): Promise<void> {
+    await api.put('/api/profile', { [key]: value });
 }
 
 export async function getEntries(type: string, from?: string, to?: string): Promise<Entry[]> {

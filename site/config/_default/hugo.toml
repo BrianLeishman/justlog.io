@@ -2,6 +2,8 @@ baseURL = "https://justlog.io/"
 title = "JustLog"
 theme = []
 
+[params]
+apiBase = "https://k24xsd279c.execute-api.us-east-1.amazonaws.com"
 [[module.mounts]]
 source = "layouts"
 target = "layouts"

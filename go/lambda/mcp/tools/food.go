@@ -24,7 +24,8 @@ func logFood(s *Spec) {
 		mcp.WithString("description", mcp.Description("What was eaten, e.g. '2 eggs and toast'"), mcp.Required()),
 		mcp.WithNumber("calories", mcp.Description("Total calories")),
 		mcp.WithNumber("protein", mcp.Description("Protein in grams")),
-		mcp.WithNumber("carbs", mcp.Description("Carbohydrates in grams")),
+		mcp.WithNumber("carbs", mcp.Description("Total carbohydrates in grams")),
+		mcp.WithNumber("net_carbs", mcp.Description("Net carbs in grams (total carbs minus fiber and non-impact carbs like sugar alcohols). Not always simply carbs minus fiber — estimate based on the food.")),
 		mcp.WithNumber("fat", mcp.Description("Fat in grams")),
 		mcp.WithNumber("fiber", mcp.Description("Fiber in grams")),
 		mcp.WithNumber("caffeine", mcp.Description("Caffeine in milligrams")),
@@ -32,7 +33,7 @@ func logFood(s *Spec) {
 		mcp.WithNumber("sodium", mcp.Description("Sodium in milligrams")),
 		mcp.WithNumber("sugar", mcp.Description("Sugar in grams")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
-		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset (e.g. 2026-02-08T17:30:00-05:00); defaults to now UTC"), mcp.Required()),
+		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset. IMPORTANT: call get_current_time first to get the correct time and offset. Example: 2026-02-08T17:30:00-05:00. Double-check AM vs PM."), mcp.Required()),
 	)
 
 	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -54,6 +55,7 @@ func logFood(s *Spec) {
 			Calories:    req.GetFloat("calories", 0),
 			Protein:     req.GetFloat("protein", 0),
 			Carbs:       req.GetFloat("carbs", 0),
+			NetCarbs:    req.GetFloat("net_carbs", 0),
 			Fat:         req.GetFloat("fat", 0),
 			Fiber:       req.GetFloat("fiber", 0),
 			Caffeine:    req.GetFloat("caffeine", 0),
@@ -68,7 +70,10 @@ func logFood(s *Spec) {
 			return nil, fmt.Errorf("save food entry: %w", err)
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Logged food: %s (%0.f cal)", entry.Description, entry.Calories)), nil
+		loc := userTimezone(ctx, uid)
+		localTime := ts.In(loc).Format("Mon Jan 2 3:04 PM")
+
+		return mcp.NewToolResultText(fmt.Sprintf("Logged food: %s (%0.f cal) at %s (%s)", entry.Description, entry.Calories, localTime, loc.String())), nil
 	})
 }
 

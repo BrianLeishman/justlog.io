@@ -20,6 +20,7 @@ type Entry struct {
 	Calories    float64 `dynamodbav:"calories,omitempty" json:"calories,omitempty"`
 	Protein     float64 `dynamodbav:"protein,omitempty" json:"protein,omitempty"`
 	Carbs       float64 `dynamodbav:"carbs,omitempty" json:"carbs,omitempty"`
+	NetCarbs    float64 `dynamodbav:"netCarbs,omitempty" json:"net_carbs,omitempty"`
 	Fat         float64 `dynamodbav:"fat,omitempty" json:"fat,omitempty"`
 	Fiber       float64 `dynamodbav:"fiber,omitempty" json:"fiber,omitempty"`
 	Caffeine    float64 `dynamodbav:"caffeine,omitempty" json:"caffeine,omitempty"`

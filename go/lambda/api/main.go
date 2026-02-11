@@ -191,6 +191,16 @@ func handleProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
+	case http.MethodGet:
+		profile, err := dynamo.GetProfile(r.Context(), u.Sub)
+		if err != nil {
+			log.Printf("get profile error: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(profile)
+
 	case http.MethodPut:
 		var fields map[string]string
 		if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {

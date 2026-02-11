@@ -24,7 +24,7 @@ func logWeight(s *Spec) {
 		mcp.WithNumber("value", mcp.Description("Weight value"), mcp.Required()),
 		mcp.WithString("unit", mcp.Description("Unit: lbs or kg (default: lbs)")),
 		mcp.WithString("notes", mcp.Description("Optional notes")),
-		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset (e.g. 2026-02-08T17:30:00-05:00); defaults to now UTC"), mcp.Required()),
+		mcp.WithString("timestamp", mcp.Description("ISO 8601 timestamp with timezone offset. IMPORTANT: call get_current_time first to get the correct time and offset. Example: 2026-02-08T17:30:00-05:00. Double-check AM vs PM."), mcp.Required()),
 	)
 
 	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -54,7 +54,10 @@ func logWeight(s *Spec) {
 			return nil, fmt.Errorf("save weight entry: %w", err)
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Logged weight: %.1f %s", entry.Value, entry.Unit)), nil
+		loc := userTimezone(ctx, uid)
+		localTime := ts.In(loc).Format("Mon Jan 2 3:04 PM")
+
+		return mcp.NewToolResultText(fmt.Sprintf("Logged weight: %.1f %s at %s (%s)", entry.Value, entry.Unit, localTime, loc.String())), nil
 	})
 }
 

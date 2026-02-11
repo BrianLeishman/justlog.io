@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ block "title" . }}{{ if .IsHome }}{{ .Site.Title }} — Track Calories & Macros With Your AI Assistant{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}{{ end }}</title>
     <meta name="description" content="{{ .Site.Params.description | default "Track calories, macros, exercise, and weight through your AI assistant. No app needed — just talk." }}">
+    <meta name="api-base" content="{{ .Site.Params.apiBase }}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta property="og:title" content="{{ if .IsHome }}{{ .Site.Title }} — Track Calories & Macros With Your AI Assistant{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}">
     <meta property="og:description" content="Track calories, macros, exercise, and weight through your AI assistant. No app needed — just talk.">
@@ -58,34 +59,40 @@
     })();
     </script>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/"><img src="/favicon.svg" alt="" width="24" height="24">{{ .Site.Title }}</a>
-            <div class="ms-auto d-flex align-items-center gap-3">
-                <div class="dropdown">
-                    <button class="btn btn-link text-body-secondary p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Toggle theme">
-                        <i class="fa-solid fa-circle-half-stroke fa-lg"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="light"><i class="fa-solid fa-sun fa-fw"></i> Light</button></li>
-                        <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="dark"><i class="fa-solid fa-moon fa-fw"></i> Dark</button></li>
-                        <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="auto"><i class="fa-solid fa-circle-half-stroke fa-fw"></i> Auto</button></li>
-                    </ul>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav me-auto" id="nav-links"></ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-link text-body-secondary p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Toggle theme">
+                            <i class="fa-solid fa-circle-half-stroke fa-lg"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="light"><i class="fa-solid fa-sun fa-fw"></i> Light</button></li>
+                            <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="dark"><i class="fa-solid fa-moon fa-fw"></i> Dark</button></li>
+                            <li><button class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="auto"><i class="fa-solid fa-circle-half-stroke fa-fw"></i> Auto</button></li>
+                        </ul>
+                    </div>
+                    <a href="https://github.com/BrianLeishman/justlog.io" class="text-body-secondary" aria-label="GitHub" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-github fa-lg"></i>
+                    </a>
+                    <div id="auth"></div>
                 </div>
-                <a href="https://github.com/BrianLeishman/justlog.io" class="text-body-secondary" aria-label="GitHub" target="_blank" rel="noopener">
-                    <i class="fa-brands fa-github fa-lg"></i>
-                </a>
-                <div id="auth"></div>
             </div>
         </div>
     </nav>
 
-    <main class="container py-4">
+    <main class="container py-4 flex-grow-1">
         {{ block "main" . }}{{ end }}
     </main>
 
-    <footer class="container py-4 mt-5 border-top">
+    <footer class="container py-4 mt-auto border-top">
         <div class="d-flex flex-wrap justify-content-between align-items-center text-body-secondary small">
             <span>&copy; {{ now.Year }} JustLog</span>
             <div class="d-flex gap-3">
