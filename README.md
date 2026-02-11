@@ -4,6 +4,10 @@ A calorie, macro, and weight tracking service designed to be used through AI ass
 
 The core idea: the MCP server is the product. Claude, ChatGPT, or any MCP-compatible client acts as the interface. The AI estimates calories and macros from natural language, and JustLog stores the numbers.
 
+| | | | |
+|:---:|:---:|:---:|:---:|
+| ![Calories](screenshots/1-calories.png) | ![Food Log](screenshots/2-food-log.png) | ![Totals](screenshots/3-totals.png) | ![Weight](screenshots/4-weight.png) |
+
 ## How It Works
 
 Connect the JustLog MCP server to your AI assistant. Then just talk to it normally:
