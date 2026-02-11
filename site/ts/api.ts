@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAccessToken, logout } from './auth';
+import { getAccessToken, clearTokens } from './auth';
 
 const apiBase = document.querySelector<HTMLMetaElement>('meta[name="api-base"]')?.content
     ?? 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com';
@@ -28,7 +28,7 @@ api.interceptors.response.use(
         const data: unknown = error.response.data;
         if (status === 401) {
             showError('Session expired. Please sign in again.');
-            logout();
+            clearTokens();
             setTimeout(() => window.location.reload(), 1500);
         } else {
             const message = typeof data === 'string' ? data : error.message;

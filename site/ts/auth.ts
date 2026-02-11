@@ -131,7 +131,7 @@ export function getUser(): { email: string; name: string; picture: string } | nu
         if (payload.exp * 1000 < Date.now()) {
             // Token expired and no API key — fully logged out
             if (!localStorage.getItem('api_key')) {
-                logout();
+                clearTokens();
                 return null;
             }
         }
@@ -199,11 +199,22 @@ export function isLoggedIn(): boolean {
     return getUser() !== null;
 }
 
-export function logout(): void {
+export function clearTokens(): void {
     localStorage.removeItem('id_token');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('api_key');
     localStorage.removeItem('api_key_id');
     localStorage.removeItem('user_info');
+}
+
+export function logout(): void {
+    clearTokens();
+
+    // Clear Cognito hosted UI session so next login shows account chooser
+    const params = new URLSearchParams({
+        client_id: clientId,
+        logout_uri: window.location.origin + '/',
+    });
+    window.location.href = `${cognitoDomain}/logout?${params.toString()}`;
 }

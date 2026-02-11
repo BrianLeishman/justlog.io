@@ -48,7 +48,6 @@ async function init(): Promise<void> {
         `;
         document.getElementById('logout-btn')?.addEventListener('click', () => {
             logout();
-            window.location.href = '/';
         });
 
         // Mount the appropriate page renderer
