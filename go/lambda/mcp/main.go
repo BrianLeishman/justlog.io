@@ -49,6 +49,12 @@ func main() {
 	if isLambda {
 		mux := http.NewServeMux()
 
+		// OpenAI domain verification
+		mux.HandleFunc("GET /.well-known/openai-apps-challenge", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte("RiotatjG6D-VQ-7RnzdYBxIeWm8ZKSYTlDjxxIJupT4"))
+		})
+
 		// OAuth discovery
 		mux.HandleFunc("GET /.well-known/oauth-protected-resource", handleProtectedResource)
 		mux.HandleFunc("GET /.well-known/oauth-authorization-server", handleAuthServerMeta)
