@@ -1,3 +1,4 @@
+import 'bootstrap';
 import { handleCallback, getUser, login, logout } from './auth';
 import { renderDashboard } from './dashboard';
 import { renderProfile } from './profile';
