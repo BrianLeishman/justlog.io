@@ -69,6 +69,7 @@ export async function renderKeys(container: HTMLElement): Promise<void> {
     const keys = await fetchAPIKeys();
     const endpoint = 'https://k24xsd279c.execute-api.us-east-1.amazonaws.com/mcp';
 
+    keys.sort((a, b) => a.created_at.localeCompare(b.created_at));
     const keyRows = keys.length > 0
         ? keys.map(renderKeyRow).join('')
         : '<tr><td colspan="3" class="text-body-secondary">No API keys yet.</td></tr>';
@@ -98,7 +99,7 @@ export async function renderKeys(container: HTMLElement): Promise<void> {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <div class="input-group input-group-sm">
-                <input type="text" class="form-control" placeholder="Key label (e.g. Claude Code)" id="new-key-label">
+                <input type="text" class="form-control" placeholder="Key label (e.g. Claude Code)" id="new-key-label" required>
                 <button class="btn btn-primary" type="button" id="create-key-btn">Create Key</button>
             </div>
         </div>`;
@@ -117,7 +118,13 @@ function bindButtons(refresh: () => Promise<void>): void {
 
     document.getElementById('create-key-btn')?.addEventListener('click', async () => {
         const input = document.getElementById('new-key-label') as HTMLInputElement | null;
-        const label = input?.value.trim() || 'Untitled';
+        const label = input?.value.trim() || '';
+        if (!label) {
+            input?.classList.add('is-invalid');
+            input?.focus();
+            return;
+        }
+        input?.classList.remove('is-invalid');
         const result = await createAPIKey(label);
         if (!result) {
             return;
