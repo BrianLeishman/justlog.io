@@ -73,7 +73,26 @@ func logFood(s *Spec) {
 		loc := userTimezone(ctx, uid)
 		localTime := ts.In(loc).Format("Mon Jan 2 3:04 PM")
 
-		return mcp.NewToolResultText(fmt.Sprintf("Logged food: %s (%0.f cal) at %s (%s)", entry.Description, entry.Calories, localTime, loc.String())), nil
+		// Fetch today's totals
+		now := time.Now().In(loc)
+		dayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc).UTC()
+		dayEnd := dayStart.Add(24 * time.Hour)
+		todayFood, _ := dynamo.GetEntries(ctx, uid, "food", dayStart, dayEnd)
+		var totCal, totP, totC, totNC, totFat, totFiber float64
+		for _, e := range todayFood {
+			totCal += e.Calories
+			totP += e.Protein
+			totC += e.Carbs
+			totNC += e.NetCarbs
+			totFat += e.Fat
+			totFiber += e.Fiber
+		}
+
+		return mcp.NewToolResultText(fmt.Sprintf(
+			"Logged food: %s (%.0f cal) at %s (%s)\n\nDaily totals: %.0f cal | %.0fg protein | %.0fg carbs | %.0fg net carbs | %.0fg fat | %.0fg fiber",
+			entry.Description, entry.Calories, localTime, loc.String(),
+			totCal, totP, totC, totNC, totFat, totFiber,
+		)), nil
 	})
 }
 
