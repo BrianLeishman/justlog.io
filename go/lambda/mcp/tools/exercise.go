@@ -20,6 +20,7 @@ func logExercise(s *Spec) {
 	s.Define("log_exercise",
 		mcp.WithDescription("Log an exercise entry. Use this when the user tells you about a workout or physical activity."),
 		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("description", mcp.Description("What exercise was done, e.g. '30 min run'"), mcp.Required()),
 		mcp.WithNumber("calories_burned", mcp.Description("Estimated calories burned")),
@@ -65,6 +66,8 @@ func getExercise(s *Spec) {
 	s.Define("get_exercise",
 		mcp.WithDescription("Get exercise entries for a date range. Defaults to today."),
 		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("from", mcp.Description("Start date, ISO 8601 (e.g. 2026-02-05)")),
 		mcp.WithString("to", mcp.Description("End date, ISO 8601 (e.g. 2026-02-05)")),
 	)

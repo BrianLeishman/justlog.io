@@ -20,6 +20,7 @@ func logWeight(s *Spec) {
 	s.Define("log_weight",
 		mcp.WithDescription("Log a weight measurement. Use this when the user tells you their weight."),
 		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithNumber("value", mcp.Description("Weight value"), mcp.Required()),
 		mcp.WithString("unit", mcp.Description("Unit: lbs or kg (default: lbs)")),
@@ -65,6 +66,8 @@ func getWeight(s *Spec) {
 	s.Define("get_weight",
 		mcp.WithDescription("Get weight entries for a date range. Defaults to today."),
 		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithString("from", mcp.Description("Start date, ISO 8601 (e.g. 2026-02-05)")),
 		mcp.WithString("to", mcp.Description("End date, ISO 8601 (e.g. 2026-02-05)")),
 	)

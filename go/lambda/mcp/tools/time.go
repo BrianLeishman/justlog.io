@@ -17,6 +17,8 @@ func getCurrentTime(s *Spec) {
 	s.Define("get_current_time",
 		mcp.WithDescription("Get the current date and time in the user's timezone. Call this BEFORE any logging tool to get an accurate timestamp."),
 		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 	)
 	s.SkipProfileCheck()
 

@@ -21,6 +21,8 @@ func getProfile(s *Spec) {
 	s.Define("get_profile",
 		mcp.WithDescription("Get the user's profile. The profile contains required information about the user that all other tools need. If any fields are missing, you MUST ask the user to fill them in before doing anything else."),
 		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
 	)
 
 	s.Handler(func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -50,6 +52,7 @@ func updateProfile(s *Spec) {
 
 	opts = append(opts,
 		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithDestructiveHintAnnotation(false),
 	)
 	s.Define("update_profile", opts...)
